@@ -13,7 +13,6 @@
 
   <target name="compile">
     <echo message="[WIP] Compiling..."/>
-    <fail />
     <echo message="Done task 'compile'!" />
   </target>
 
@@ -90,6 +89,8 @@
   </target>
 
   <target name="history">
+    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" failonerror="true"/>
+
     <java classname="org.tmatesoft.svn.cli.SVN" fork="true" dir="${basedir}">
       <classpath refid="fse.java.classpath"/>
       <arg value="cleanup"/>
@@ -105,6 +106,9 @@
     </java>
 
     <antcall target="-history-recursion-start" />
+
+    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" failonerror="true"/>
+
     <echo message="Done task 'history'!"/>
   </target>
 
@@ -112,8 +116,10 @@
     <trycatch>
       <try>
         <antcall target="compile"/>
+        <antcall target="-history-create-log" />
       </try>
       <catch>
+        <property name="fse.history.hasErrors" value="true"/>
         <antcall target="-history-check-if-last" />
       </catch>
     </trycatch>
@@ -132,6 +138,9 @@
       <arg value="--show-item"/>
       <arg value="revision"/>
     </java>
+
+    <echo file="${java.io.tmpdir}/${fse.history.broken_rev}"
+          message="${fse.history.headRev}" />
 
     <condition property="fse.history.isNotLast">
       <not>
@@ -156,6 +165,30 @@
     </java>
 
     <antcall target="-history-recursion-start" inheritAll="false" />
+  </target>
+
+  <target name="-history-create-log" >
+    <echo message="Found working version! Logging breaking changes..." />
+
+    <loadfile property="fse.broken.rev" srcFile="${java.io.tmpdir}/${fse.history.broken_rev}"/>
+
+    <java classname="org.tmatesoft.svn.cli.SVN" 
+          outputproperty="fse.history.workingRev" 
+          fork="true">
+      <classpath refid="fse.java.classpath"/>
+      <arg value="info"/>
+      <arg value="--show-item"/>
+      <arg value="revision"/>
+    </java>
+
+    <java classname="org.tmatesoft.svn.cli.SVN" 
+          output="${fse.history.log}"
+          fork="true">
+      <classpath refid="fse.java.classpath"/>
+      <arg value="diff"/>
+      <arg value="-r"/>
+      <arg value="${fse.history.workingRev}:${fse.broken.rev}"/>
+    </java>
   </target>
 
 </project>
