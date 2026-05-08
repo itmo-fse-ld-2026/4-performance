@@ -1,0 +1,13 @@
+<ivysettings>
+  <settings defaultResolver="my-chain"/>
+  <resolvers>
+    <chain name="my-chain">
+      <filesystem name="local">
+      </filesystem>
+      <!-- for SVNKit -->
+      <ibiblio name="central" 
+               root="https://repo1.maven.org/maven2/" 
+               m2compatible="true"/>
+    </chain>
+  </resolvers>
+</ivysettings>

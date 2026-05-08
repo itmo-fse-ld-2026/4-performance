@@ -56,3 +56,4 @@ venv/
 postgresql_db_data/
 *.compiled.*
 sandbox/
+.ant

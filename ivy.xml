@@ -1,0 +1,7 @@
+<ivy-module version="2.0">
+  <info organisation="weblab" module="web3"/>
+  <dependencies>
+    <dependency org="org.tmatesoft.svnkit" name="svnkit" rev="1.10.11"/>
+    <dependency org="org.tmatesoft.svnkit" name="svnkit-cli" rev="1.10.11"/>
+  </dependencies>
+</ivy-module>

@@ -1,6 +1,12 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant">
   <property file="build.properties"/>
 
+  <path id="fse.java.classpath">
+    <fileset dir="${user.home}/.ant/lib">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
   <target name="compile">
     <echo message="[WIP] Compiling..."/>
   </target>
@@ -11,8 +17,22 @@
 
   <target name="music" depends="build">
     <sound>
-      <success source="${fse.ant.home}/sounds/build_success.wav"/>
+      <success source="${fse.ant.resources}/sounds/build_success.wav"/>
     </sound>
+  </target>
+
+  <target name="resolve">
+    <ivy:retrieve
+        pattern="${user.home}/.ant/lib/[artifact]-[revision](-[classifier]).[ext]" />
+  </target>
+
+  <target name="diff">
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          fork="true">
+      <classpath refid="fse.java.classpath"/>
+
+      <arg value="status"/>
+    </java>
   </target>
 
 </project>
