@@ -12,8 +12,6 @@ sandbox_local=$(fse.svn.sandbox.dir)/$(fse.svn.sandbox.local)
 sandbox_local_abs=$$(realpath $(sandbox_local))
 ant_home = $(sandbox_local)/$(fse.ant.home)
 
-image_dev = "test"
-
 clean:
 	# clean LaTeX artifacts
 	@for file_ext in "*.pdf" "*.aux" "*.log" "*.toc" "*.out"; do \

@@ -7,18 +7,26 @@
     </fileset>
   </path>
 
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath refid="fse.java.classpath"/>
+  </taskdef>
+
   <target name="compile">
     <echo message="[WIP] Compiling..."/>
+    <fail />
+    <echo message="Done task 'compile'!" />
   </target>
 
   <target name="build" depends="compile">
     <echo message="[WIP] Building..."/>
+    <echo message="Done task 'build'!" />
   </target>
 
   <target name="music" depends="build">
     <sound>
       <success source="${fse.ant.resources}/sounds/build_success.wav"/>
     </sound>
+    <echo message="Done task 'music'!" />
   </target>
 
   <target name="resolve">
@@ -36,25 +44,118 @@
       <arg value="status"/>
     </java>
 
+    <loadresource property="fse.diff.commitFiles">
+      <string value="${fse.diff.out}"/>
+      <filterchain>
+        <linecontainsregexp>
+          <regexp pattern="${fse.diff.classes}"/>
+        </linecontainsregexp>
+        <tokenfilter>
+          <replaceregex pattern="^.[\s]+" replace="" flags="g"/>
+        </tokenfilter>
+        <striplinebreaks/>
+        <trim/>
+      </filterchain>
+    </loadresource>
+
     <condition property="fse.diff.detected">
       <matches string="${fse.diff.out}" pattern="${fse.diff.classes}"/>
     </condition>
 
     <antcall target="-svn-commit-if-changed"/>
-    <echo message="Done!" />
+    <echo message="Done task 'diff'!" />
   </target>
 
   <target name="-svn-commit-if-changed" if="fse.diff.detected">
     <echo message="Target classes modified. Committing to SVN..."/>
+
+    <tempfile property="fse.diff.targetsFile" 
+              prefix=".commit-" 
+              suffix=".txt"
+              deleteonexit="true"/>
+    
+    <echo file="${fse.commit.targetsFile}" message="${fse.diff.commitFiles}"/>
+
     <java classname="org.tmatesoft.svn.cli.SVN"
+          failonerror="true"
           fork="true">
       <classpath refid="fse.java.classpath"/>
 
       <arg value="commit"/>
       <arg value="-m"/>
       <arg value="feat: changes in tracked classes (Ant-automated)"/>
-      <arg value="."/>
+      <arg value="--targets"/>
+      <arg value="${fse.commit.targetsFile}"/>
     </java>
+  </target>
+
+  <target name="history">
+    <java classname="org.tmatesoft.svn.cli.SVN" fork="true" dir="${basedir}">
+      <classpath refid="fse.java.classpath"/>
+      <arg value="cleanup"/>
+    </java>
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          outputproperty="fse.diff.out"
+          failonerror="true"
+          fork="true">
+      <classpath refid="fse.java.classpath"/>
+
+      <arg value="update"/>
+    </java>
+
+    <antcall target="-history-recursion-start" />
+    <echo message="Done task 'history'!"/>
+  </target>
+
+  <target name="-history-recursion-start">
+    <trycatch>
+      <try>
+        <antcall target="compile"/>
+      </try>
+      <catch>
+        <antcall target="-history-check-if-last" />
+      </catch>
+    </trycatch>
+  </target>
+
+  <target name="-history-check-if-last">
+    <echo message="[ERR] Failed to compile project! Checking previous revisions..." />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          outputproperty="fse.history.headRev"
+          failonerror="true"
+          fork="true">
+      <classpath refid="fse.java.classpath"/>
+
+      <arg value="info"/>
+      <arg value="--show-item"/>
+      <arg value="revision"/>
+    </java>
+
+    <condition property="fse.history.isNotLast">
+      <not>
+        <equals arg1="${fse.history.headRev}" arg2="2"/>
+      </not>
+    </condition>
+
+    <antcall target="-history-revert" />
+  </target>
+
+  <target name="-history-revert" if="fse.history.isNotLast" >
+    <echo message="Found previous revision for r${fse.history.headRev}! Reverting..." />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          failonerror="true"
+          fork="true">
+      <classpath refid="fse.java.classpath"/>
+
+      <arg value="update"/>
+      <arg value="-r"/>
+      <arg value="PREV"/>
+    </java>
+
+    <antcall target="-history-recursion-start" inheritAll="false" />
   </target>
 
 </project>
