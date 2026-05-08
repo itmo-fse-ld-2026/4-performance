@@ -21,11 +21,22 @@
     <echo message="Done task 'build'!" />
   </target>
 
-  <target name="music" depends="build">
+  <target name="music">
     <sound>
-      <success source="${fse.ant.resources}/sounds/build_success.wav"/>
+      <success source="${fse.ant.resources}/sounds/build_success.wav" />
+      <fail source="${fse.ant.resources}/sounds/build_fail.wav" />
     </sound>
-    <echo message="Done task 'music'!" />
+    <trycatch>
+      <try>
+        <antcall target="build" inheritAll="true"/>
+      </try>
+      <catch>
+        <fail message="[ERR] Compilation failure" />
+      </catch>
+      <finally>
+        <echo message="Done task 'music'!" />
+      </finally>
+    </trycatch>
   </target>
 
   <target name="resolve">
