@@ -55,3 +55,4 @@ __pycache__/
 venv/
 postgresql_db_data/
 *.compiled.*
+sandbox/
