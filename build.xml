@@ -27,11 +27,33 @@
   </target>
 
   <target name="diff">
+    <echo message="Checking for changes in target classes..." />
     <java classname="org.tmatesoft.svn.cli.SVN"
+          outputproperty="fse.diff.out"
           fork="true">
       <classpath refid="fse.java.classpath"/>
 
       <arg value="status"/>
+    </java>
+
+    <condition property="fse.diff.detected">
+      <matches string="${fse.diff.out}" pattern="${fse.diff.classes}"/>
+    </condition>
+
+    <antcall target="-svn-commit-if-changed"/>
+    <echo message="Done!" />
+  </target>
+
+  <target name="-svn-commit-if-changed" if="fse.diff.detected">
+    <echo message="Target classes modified. Committing to SVN..."/>
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          fork="true">
+      <classpath refid="fse.java.classpath"/>
+
+      <arg value="commit"/>
+      <arg value="-m"/>
+      <arg value="feat: changes in tracked classes (Ant-automated)"/>
+      <arg value="."/>
     </java>
   </target>
 

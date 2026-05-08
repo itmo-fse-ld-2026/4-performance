@@ -9,6 +9,9 @@ FROM python:3.11-slim
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   subversion \
+  # adding git for reading .gitignore file
+  # without suffer (lazy solution)
+  git \
   make \
   ant \
   ant-optional && \
@@ -33,5 +36,5 @@ RUN apt-get update && \
 # Apache Ivy installation
 RUN curl -o ivy.zip https://dlcdn.apache.org//ant/ivy/2.5.3/apache-ivy-2.5.3-bin.zip && \
   unzip ivy.zip && \
-  mkdir -p ~/.ant/lib && \
-  mv apache-ivy-2.5.3/ivy-2.5.3.jar ~/.ant/lib
+  mkdir -p /ant/lib && \
+  mv apache-ivy-2.5.3/ivy-2.5.3.jar /ant/lib

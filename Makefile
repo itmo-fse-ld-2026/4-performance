@@ -44,9 +44,7 @@ sandbox: clean
 	svn add --force $(sandbox_local)
 	svn commit -m "chore: init commit" $(sandbox_local)
 	@echo "# copying Ant depedencies for the first time"
-	docker create --name temp-ant-home $(image_dev)
-	docker cp temp-ant-home:/root/.ant/lib $(ant_home)
-	docker rm temp-ant-home
+	cp -r /ant/lib $(ant_home)
 	@echo "# svn sandbox is done!"
 pdf:
 	cd "${fse.pdf.report_dir}"; \
