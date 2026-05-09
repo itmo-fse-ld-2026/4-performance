@@ -12,7 +12,7 @@
   </taskdef>
 
   <target name="compile">
-    <echo message="Compiling the project..."/>
+    <echo message="Compiling the project from ${fse.compile.source}..."/>
 
     <mkdir dir="${fse.compile.target}" />
     <javac srcdir="${fse.compile.source}"
@@ -269,14 +269,39 @@
                        regexp=":(.+)$"
                        select="\1" />
         <replaceregexp match="${from}" replace="${to}" flags="g" byline="true">
-          <fileset dir="src">
+          <fileset dir="${fse.alt.dir}">
             <filename regex="${fse.alt.files}"/>
           </fileset>
         </replaceregexp>
       </sequential>
     </for>
 
-    <antcall target="build" />
+    <for list="${fse.alt.pairs}" param="pair" delimiter=",">
+      <sequential>
+        <local name="from"/>
+        <local name="to"/>
+
+        <propertyregex property="from"
+                       input="@{pair}"
+                       regexp="^(.+):"
+                       select="\1" />
+        <propertyregex property="to"
+                       input="@{pair}"
+                       regexp=":(.+)$"
+                       select="\1" />
+        
+        <move todir="${fse.alt.dir}">
+          <fileset dir="${fse.alt.dir}">
+            <include name="**/*"/>
+          </fileset>
+          <mapper type="regexp" from="^(.*)${from}(.*)$" to="\1${to}\2"/>
+        </move>
+      </sequential>
+    </for>
+
+    <antcall target="build">
+      <param name="fse.compile.source" value="${fse.alt.dir}" />
+    </antcall>
   </target>
 
 </project>
