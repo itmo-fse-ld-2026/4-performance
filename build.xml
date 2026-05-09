@@ -21,6 +21,19 @@
     <echo message="Done task 'build'!" />
   </target>
 
+  <target name="scp" depends="build">
+      <echo message="Copying project to the ${fse.scp.ssh.host}:${fse.scp.file.todir}..." />
+
+      <scp todir="${fse.scp.ssh.host}:${fse.scp.file.todir}"
+           port="${fse.scp.ssh.port}"
+           keyfile="${user.home}/${fse.scp.ssh.key}"
+           trust="true">
+        <fileset dir="target" casesensitive="yes">
+          <filename regex="${fse.scp.file.regex}"/>
+        </fileset>
+      </scp>
+  </target>
+
   <target name="music">
     <sound>
       <success source="${fse.ant.resources}/sounds/build_success.wav" />
