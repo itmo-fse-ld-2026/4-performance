@@ -10,7 +10,7 @@ sandbox_remote=$(fse.svn.sandbox.dir)/$(fse.svn.sandbox.remote)
 sandbox_remote_abs=$$(realpath $(sandbox_remote))
 sandbox_local=$(fse.svn.sandbox.dir)/$(fse.svn.sandbox.local)
 sandbox_local_abs=$$(realpath $(sandbox_local))
-ant_home = $(sandbox_local)/$(fse.ant.home)
+ant_home = $(sandbox_local)$(fse.ant.home)
 
 clean:
 	# clean LaTeX artifacts

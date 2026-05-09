@@ -2,7 +2,7 @@
   <property file="build.properties"/>
 
   <path id="fse.java.classpath">
-    <fileset dir="${user.home}/.ant/lib">
+    <fileset dir="${fse.ant.home}/lib">
       <include name="*.jar"/>
     </fileset>
   </path>
@@ -13,6 +13,9 @@
 
   <target name="compile">
     <echo message="Compiling the project from ${fse.compile.source}..."/>
+
+    <echo message="Source Java: ${fse.compile.jvm.source}"/>
+    <echo message="Target Java: ${fse.compile.jvm.target}"/>
 
     <mkdir dir="${fse.compile.target}" />
     <javac srcdir="${fse.compile.source}"
@@ -36,7 +39,7 @@
       <fileset dir="${fse.compile.target}" />
     </copy>
     <copy todir="${fse.build.target}/WEB-INF/lib">
-      <fileset dir="${user.home}/.ant/lib" />
+      <fileset dir="${fse.ant.home}/lib" />
     </copy>
 
     <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
@@ -56,7 +59,7 @@
 
       <scp todir="${fse.scp.ssh.host}:${fse.scp.file.todir}"
            port="${fse.scp.ssh.port}"
-           keyfile="${user.home}/${fse.scp.ssh.key}"
+           keyfile="/ssh/${fse.scp.ssh.key}"
            trust="true">
         <fileset dir="target" casesensitive="yes">
           <filename regex="${fse.scp.file.regex}"/>
@@ -84,7 +87,7 @@
 
   <target name="resolve">
     <ivy:retrieve
-        pattern="${user.home}/.ant/lib/[artifact]-[revision](-[classifier]).[ext]" />
+        pattern="${fse.ant.home}/lib/[artifact]-[revision](-[classifier]).[ext]" />
   </target>
 
   <target name="diff">
@@ -249,7 +252,7 @@
     <delete dir="${fse.alt.dir}" failonerror="false"/>
     <mkdir dir="${fse.alt.dir}"/>
 
-    <echo message="Creating alternative version of project... ${fse.alt.dir}" />
+    <echo message="Creating alternative version of project..." />
 
     <copy todir="${fse.alt.dir}">
       <fileset dir="src"/>
@@ -304,4 +307,26 @@
     </antcall>
   </target>
 
+  <target name="env">
+    <echo message="Building project for specified Java environment..." />
+
+    <antcall target="build">
+      <param name="fse.compile.jvm.source" value="${fse.env.jvm.source}" />
+      <param name="fse.compile.jvm.target" value="${fse.env.jvm.target}" />
+    </antcall>
+    
+    <echo message="JVM Arguments: ${fse.env.jvm.args}" />
+
+    <exec executable="make">
+      <env key="POSTGRES_HOST" value="${fse.env.postgres.host}"/>
+      <env key="POSTGRES_DB"   value="${fse.env.postgres.db}"/>
+      <env key="POSTGRES_PORT" value="${fse.env.postgres.port}"/>
+      <env key="POSTGRES_USER" value="${fse.env.postgres.user}"/>
+      <env key="POSTGRES_PASSWORD" value="${fse.env.postgres.password}"/>
+      <env key="VERSION_TAG"   value="${fse.env.docker.tag}"/>
+      <env key="JAVA_OPTS"     value="${fse.env.jvm.args}"/>
+
+      <arg value="run"/>
+    </exec>
+  </target>
 </project>

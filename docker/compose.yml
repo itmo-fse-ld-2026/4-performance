@@ -25,8 +25,10 @@ services:
       - POSTGRES_PORT
       - POSTGRES_USER
       - POSTGRES_PASSWORD
+      - JAVA_OPTS=${JAVA_OPTS-}
     volumes:
       - ./src/main/resources/wildfly/standalone.compiled.xml:/opt/jboss/wildfly/standalone/configuration/standalone.xml
+      - ./src/main/resources/wildfly/standalone.compiled.conf:/opt/jboss/wildfly/bin/standalone.conf
       - ./target:/opt/jboss/wildfly/standalone/deployments/
     networks:
       - backend

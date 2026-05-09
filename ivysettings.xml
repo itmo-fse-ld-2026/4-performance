@@ -1,4 +1,5 @@
 <ivysettings>
+  <caches defaultCacheDir="${fse.ant.home}/.ivy2/cache" />
   <settings defaultResolver="my-chain"/>
   <resolvers>
     <chain name="my-chain">
