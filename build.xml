@@ -127,7 +127,7 @@
               suffix=".txt"
               deleteonexit="true"/>
     
-    <echo file="${fse.commit.targetsFile}" message="${fse.diff.commitFiles}"/>
+    <echo file="${fse.diff.targetsFile}" message="${fse.diff.commitFiles}"/>
 
     <java classname="org.tmatesoft.svn.cli.SVN"
           failonerror="true"
@@ -138,7 +138,7 @@
       <arg value="-m"/>
       <arg value="feat: changes in tracked classes (Ant-automated)"/>
       <arg value="--targets"/>
-      <arg value="${fse.commit.targetsFile}"/>
+      <arg value="${fse.diff.targetsFile}"/>
     </java>
   </target>
 
