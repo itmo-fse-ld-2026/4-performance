@@ -1,5 +1,8 @@
+AUDIO_GID=$(getent group audio | cut -d: -f3)
+
 docker run --rm \
   --user "$(id -u):0" \
+  --group-add "$AUDIO_GID" \
   -v .:/project \
   -v .ant:/.ant \
   -v ../remote:/project/sandbox/remote \
