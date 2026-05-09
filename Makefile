@@ -18,15 +18,15 @@ clean:
 		find $(fse.pdf.report_dir) -name "$${file_ext}" -delete; \
 	done
 	# clean other artifacts
-	find . -name "*.compiled.*" -delete; \
+	find . -name "*.compiled.*" -delete
+clean-sandbox:
 	rm -rf target $(fse.svn.sandbox.dir)
 run: clean
 	python src/main/python/main.py
-	mvn package
 	docker compose --file docker/compose.yml --project-directory . up
 down:
 	docker compose --file docker/compose.yml --project-directory . down
-sandbox: clean
+sandbox: clean-sandbox
 	@echo "# creating sandbox..."
 	@mkdir -p $(sandbox_remote) $(sandbox_local) $(ant_home)
 	@exclude_args=""; \

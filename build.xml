@@ -12,12 +12,42 @@
   </taskdef>
 
   <target name="compile">
-    <echo message="[WIP] Compiling..."/>
+    <echo message="Compiling the project..."/>
+
+    <mkdir dir="${fse.compile.target}" />
+    <javac srcdir="${fse.compile.source}"
+           destdir="${fse.compile.target}"
+           source="${fse.compile.jvm.source}"
+           target="${fse.compile.jvm.target}" />
+
     <echo message="Done task 'compile'!" />
   </target>
 
   <target name="build" depends="compile">
-    <echo message="[WIP] Building..."/>
+    <echo message="Building the project..."/>
+
+    <delete dir="${fse.build.target}" />
+    <mkdir dir="${fse.build.target}" />
+    
+    <copy todir="${fse.build.target}">
+      <fileset dir="${fse.build.webapp}" />
+    </copy>
+    <copy todir="${fse.build.target}/WEB-INF/classes">
+      <fileset dir="${fse.compile.target}" />
+    </copy>
+    <copy todir="${fse.build.target}/WEB-INF/lib">
+      <fileset dir="${user.home}/.ant/lib" />
+    </copy>
+
+    <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
+         basedir="${fse.build.source}">
+      <fileset dir="${fse.build.target}" />
+      <!-- <manifest>
+        <attribute name="Main-Class"
+                   value="com.acme.checksites.Main"/>
+      </manifest> -->
+    </jar>
+
     <echo message="Done task 'build'!" />
   </target>
 

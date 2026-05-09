@@ -1,4 +1,4 @@
-<ivy-module version="2.0">
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
   <info organisation="weblab" module="web3"/>
   <dependencies>
     <!-- for svn goals -->
@@ -11,5 +11,16 @@
     </dependency>
     <!-- for scp goal -->
     <dependency org="com.github.mwiede" name="jsch" rev="2.28.2"/>
+
+    <!-- project dependencies -->
+    <dependency org="jakarta.faces" name="jakarta.faces-api" rev="4.0.1" />
+    <dependency org="org.primefaces" name="primefaces" rev="12.0.0" e:classifier="jakarta" />
+    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" />
+    <dependency org="org.postgresql" name="postgresql" rev="42.7.3" />
+    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" />
+    <dependency org="jakarta.enterprise" name="jakarta.enterprise.cdi-api" rev="4.0.1" />
+    <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.17.1" />
+    <dependency org="com.fasterxml.jackson.datatype" name="jackson-datatype-jsr310" rev="2.17.1" />
+    <dependency org="io.vavr" name="vavr" rev="0.10.4" />
   </dependencies>
 </ivy-module>
