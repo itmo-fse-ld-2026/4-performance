@@ -215,4 +215,38 @@
     </java>
   </target>
 
+  <target name="alt">
+    <delete dir="${fse.alt.dir}" failonerror="false"/>
+    <mkdir dir="${fse.alt.dir}"/>
+
+    <echo message="Creating alternative version of project... ${fse.alt.dir}" />
+
+    <copy todir="${fse.alt.dir}">
+      <fileset dir="src"/>
+    </copy>
+
+    <for list="${fse.alt.pairs}" param="pair" delimiter=",">
+      <sequential>
+        <local name="from"/>
+        <local name="to"/>
+
+        <propertyregex property="from"
+                       input="@{pair}"
+                       regexp="^(.+):"
+                       select="\1" />
+        <propertyregex property="to"
+                       input="@{pair}"
+                       regexp=":(.+)$"
+                       select="\1" />
+        <replaceregexp match="${from}" replace="${to}" flags="g" byline="true">
+          <fileset dir="src">
+            <filename regex="${fse.alt.files}"/>
+          </fileset>
+        </replaceregexp>
+      </sequential>
+    </for>
+
+    <antcall target="build" />
+  </target>
+
 </project>
