@@ -57,3 +57,4 @@ postgresql_db_data/
 *.compiled.*
 sandbox/
 .ant
+build.properties
