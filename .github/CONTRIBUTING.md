@@ -4,7 +4,7 @@
 
 ### Сборка через Docker
 
-В проекте используется два специализированных образа:
+В проекте используется три специализированных образа:
 1. **3-ant-environment** (`Dockerfile.dev`) — окружение для разработки, работы с кодом и скриптами.
 2. **3-web-environment** (`Dockerfile.web`) — окружение для запуска веб-контейнера.
 3. **3-xetex-compiler** (`Dockerfile.report`) — окружение для сборки PDF-отчётов.
@@ -13,13 +13,13 @@
 
 | Скрипт | Назначение |
 |--------|------------|
-| `docker/run_ant.sh <target>` | Запуск указанной Ant-цели с монтированием `.ant` и `.ssh` |
-| `docker/run_sandbox.sh` | Инициализация локальной SVN-песочницы через `make sandbox` |
-| `docker/run_env.sh` | Запуск цели `env` с пробросом сокета Docker _(Docker-out-of-Docker)_ |
+| `docker/run_ant.sh <version_tag> <target>` | Запуск указанной Ant-цели с монтированием `.ant` и `.ssh` |
+| `docker/run_sandbox.sh <version_tag>` | Инициализация локальной SVN-песочницы через `make sandbox` |
+| `docker/run_env.sh <version_tag>` | Запуск цели `env` с пробросом сокета Docker _(Docker-out-of-Docker)_ |
 
 Пример использования:
 ```bash
-./docker/run_ant.sh build
+./docker/run_ant.sh dev build
 ```
 
 **Примечание 1:** Скрипты являются шаблонами, их работоспособность не гарантирована в различных окружениях. 

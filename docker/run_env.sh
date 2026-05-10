@@ -8,5 +8,5 @@ docker run --rm \
   --group-add "$DOCKER_GID" \
   -v "$PROJECT_PATH/.ant:/.ant" \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  ghcr.io/itmo-fse-ld-2026/3-ant-environment:dev \
+  ghcr.io/itmo-fse-ld-2026/3-ant-environment:$1 \
   ant env
