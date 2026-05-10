@@ -45,10 +45,12 @@
     <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
          basedir="${fse.build.source}">
       <fileset dir="${fse.build.target}" />
-      <!-- <manifest>
-        <attribute name="Main-Class"
-                   value="com.acme.checksites.Main"/>
-      </manifest> -->
+      <manifest>
+        <attribute name="Main-Class" value="${fse.build.main}"/>
+        <attribute name="Specification-Title" value="${fse.build.title}"/>
+        <attribute name="Specification-Version" value="${fse.build.version}"/>
+        <attribute name="Specification-Vendor" value="${fse.build.vendor}"/>
+      </manifest>
     </jar>
 
     <echo message="Done task 'build'!" />
@@ -304,6 +306,8 @@
 
     <antcall target="build">
       <param name="fse.compile.source" value="${fse.alt.dir}" />
+
+      <param name="fse.build.version" value="${fse.build.version}-alt" />
     </antcall>
   </target>
 
@@ -313,18 +317,20 @@
     <antcall target="build">
       <param name="fse.compile.jvm.source" value="${fse.env.jvm.source}" />
       <param name="fse.compile.jvm.target" value="${fse.env.jvm.target}" />
+
+      <param name="fse.build.version" value="${fse.build.version}-env" />
     </antcall>
     
     <echo message="JVM Arguments: ${fse.env.jvm.args}" />
 
     <exec executable="make">
       <env key="POSTGRES_HOST" value="${fse.env.postgres.host}"/>
-      <env key="POSTGRES_DB"   value="${fse.env.postgres.db}"/>
+      <env key="POSTGRES_DB" value="${fse.env.postgres.db}"/>
       <env key="POSTGRES_PORT" value="${fse.env.postgres.port}"/>
       <env key="POSTGRES_USER" value="${fse.env.postgres.user}"/>
       <env key="POSTGRES_PASSWORD" value="${fse.env.postgres.password}"/>
-      <env key="VERSION_TAG"   value="${fse.env.docker.tag}"/>
-      <env key="JAVA_OPTS"     value="${fse.env.jvm.args}"/>
+      <env key="VERSION_TAG" value="${fse.env.docker.tag}"/>
+      <env key="JAVA_OPTS" value="${fse.env.jvm.args}"/>
 
       <arg value="run"/>
     </exec>
