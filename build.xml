@@ -69,6 +69,14 @@
       </scp>
   </target>
 
+  <target name="clean">
+    <echo message="Cleaning up the project artifacts..." />
+
+    <delete dir="${fse.compile.target}"/>
+    <delete dir="${fse.build.target}"/>
+    <delete dir="${fse.alt.dir}"/>
+  </target>
+
   <target name="music">
     <sound>
       <success source="${fse.ant.resources}/sounds/build_success.wav" />
