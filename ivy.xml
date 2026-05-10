@@ -1,26 +1,32 @@
 <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
   <info organisation="weblab" module="web3"/>
+
+  <configurations>
+    <conf name="compile" description="Dependencies for javac"/>
+    <conf name="ant" description="Dependencies for Ant tasks"/>
+  </configurations>
+
   <dependencies>
     <!-- for svn goals -->
-    <dependency org="org.tmatesoft.svnkit" name="svnkit" rev="1.10.11"/>
-    <dependency org="org.tmatesoft.svnkit" name="svnkit-cli" rev="1.10.11"/>
+    <dependency org="org.tmatesoft.svnkit" name="svnkit" rev="1.10.11" conf="ant->default" />
+    <dependency org="org.tmatesoft.svnkit" name="svnkit-cli" rev="1.10.11" conf="ant->default" />
     <!-- for trycatch -->
-    <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3">
+    <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="ant->default" >
       <!-- excluding for resolving version conflicts -->
-      <exclude org="ant" name="ant"/>
+      <exclude org="ant" name="ant" />
     </dependency>
     <!-- for scp goal -->
-    <dependency org="com.github.mwiede" name="jsch" rev="2.28.2"/>
+    <dependency org="com.github.mwiede" name="jsch" rev="2.28.2" conf="ant->default" />
 
     <!-- project dependencies -->
-    <dependency org="jakarta.faces" name="jakarta.faces-api" rev="4.0.1" />
-    <dependency org="org.primefaces" name="primefaces" rev="12.0.0" e:classifier="jakarta" />
-    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" />
-    <dependency org="org.postgresql" name="postgresql" rev="42.7.3" />
-    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" />
-    <dependency org="jakarta.enterprise" name="jakarta.enterprise.cdi-api" rev="4.0.1" />
-    <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.17.1" />
-    <dependency org="com.fasterxml.jackson.datatype" name="jackson-datatype-jsr310" rev="2.17.1" />
-    <dependency org="io.vavr" name="vavr" rev="0.10.4" />
+    <dependency org="jakarta.faces" name="jakarta.faces-api" rev="4.0.1" conf="compile->default" />
+    <dependency org="org.primefaces" name="primefaces" rev="12.0.0" e:classifier="jakarta" conf="compile->default" />
+    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" conf="compile->default" />
+    <dependency org="org.postgresql" name="postgresql" rev="42.7.3" conf="compile->default" />
+    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" conf="compile->default" />
+    <dependency org="jakarta.enterprise" name="jakarta.enterprise.cdi-api" rev="4.0.1" conf="compile->default" />
+    <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.17.1" conf="compile->default" />
+    <dependency org="com.fasterxml.jackson.datatype" name="jackson-datatype-jsr310" rev="2.17.1" conf="compile->default" />
+    <dependency org="io.vavr" name="vavr" rev="0.10.4" conf="compile->default" />
   </dependencies>
 </ivy-module>

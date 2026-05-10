@@ -1,15 +1,32 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant">
   <property file="build.properties"/>
 
-  <path id="fse.java.classpath">
+  <path id="fse.ivy.path.ant">
     <fileset dir="${fse.ant.home}/lib">
       <include name="*.jar"/>
     </fileset>
   </path>
 
+  <path id="fse.ivy.path.compile">
+    <fileset dir="${fse.ant.home}/compile">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
   <taskdef resource="net/sf/antcontrib/antlib.xml">
-    <classpath refid="fse.java.classpath"/>
+    <classpath refid="fse.ivy.path.ant"/>
   </taskdef>
+
+  <target name="resolve">
+    <ivy:resolve />
+
+    <ivy:retrieve
+        conf="ant"
+        pattern="${fse.ant.home}/lib/[artifact]-[revision](-[classifier]).[ext]" />
+    <ivy:retrieve
+        conf="compile"
+        pattern="${fse.ant.home}/compile/[artifact]-[revision](-[classifier]).[ext]" />
+  </target>
 
   <target name="compile">
     <echo message="Compiling the project from ${fse.compile.source}..."/>
@@ -17,11 +34,17 @@
     <echo message="Source Java: ${fse.compile.jvm.source}"/>
     <echo message="Target Java: ${fse.compile.jvm.target}"/>
 
+    <delete dir="${fse.compile.target}" />
     <mkdir dir="${fse.compile.target}" />
+
     <javac srcdir="${fse.compile.source}"
            destdir="${fse.compile.target}"
            source="${fse.compile.jvm.source}"
-           target="${fse.compile.jvm.target}" />
+           target="${fse.compile.jvm.target}"
+           classpathref="fse.ivy.path.compile"
+           includeantruntime="false">
+      <compilerarg value="-proc:none"/>
+    </javac>
 
     <echo message="Done task 'compile'!" />
   </target>
@@ -93,11 +116,6 @@
         <echo message="Done task 'music'!" />
       </finally>
     </trycatch>
-  </target>
-
-  <target name="resolve">
-    <ivy:retrieve
-        pattern="${fse.ant.home}/lib/[artifact]-[revision](-[classifier]).[ext]" />
   </target>
 
   <target name="diff">
