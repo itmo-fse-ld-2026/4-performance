@@ -20,5 +20,7 @@ RUN \
     hyphen-russian \
     hyperref \
     titlesec \
-    etoolbox && \
+    etoolbox \
+    listings \
+    xcolor && \
   apt-get clean
