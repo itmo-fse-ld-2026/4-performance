@@ -331,6 +331,7 @@
       <env key="POSTGRES_PASSWORD" value="${fse.env.postgres.password}"/>
       <env key="VERSION_TAG" value="${fse.env.docker.tag}"/>
       <env key="JAVA_OPTS" value="${fse.env.jvm.args}"/>
+      <env key="JAVA_HOME" value="${fse.env.jvm.home}"/>
 
       <arg value="run"/>
     </exec>
