@@ -22,7 +22,7 @@ fse.build.title = FSE Lab #3
 fse.build.vendor = ITMO FSE LD 2026
 fse.build.webapp = src/main/webapp
 
-fse.scp.file.regex = .*(file\.|yay).*
+fse.scp.file.regex = .*(war).*
 fse.scp.file.todir = ~
 fse.scp.ssh.host = s466449@cs.ifmo.ru
 fse.scp.ssh.port = 2222

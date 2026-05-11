@@ -86,7 +86,7 @@
            port="${fse.scp.ssh.port}"
            keyfile="/ssh/${fse.scp.ssh.key}"
            trust="true">
-        <fileset dir="target" casesensitive="yes">
+        <fileset dir="target">
           <filename regex="${fse.scp.file.regex}"/>
         </fileset>
       </scp>
@@ -122,9 +122,8 @@
     <echo message="Checking for changes in target classes..." />
     <java classname="org.tmatesoft.svn.cli.SVN"
           outputproperty="fse.diff.out"
+          classpathref="fse.ivy.path.ant"
           fork="true">
-      <classpath refid="fse.java.classpath"/>
-
       <arg value="status"/>
     </java>
 
@@ -162,9 +161,8 @@
 
     <java classname="org.tmatesoft.svn.cli.SVN"
           failonerror="true"
+          classpathref="fse.ivy.path.ant"
           fork="true">
-      <classpath refid="fse.java.classpath"/>
-
       <arg value="commit"/>
       <arg value="-m"/>
       <arg value="feat: changes in tracked classes (Ant-automated)"/>
@@ -176,17 +174,18 @@
   <target name="history">
     <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" failonerror="true"/>
 
-    <java classname="org.tmatesoft.svn.cli.SVN" fork="true" dir="${basedir}">
-      <classpath refid="fse.java.classpath"/>
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          fork="true"
+          classpathref="fse.ivy.path.ant"
+          dir="${basedir}">
       <arg value="cleanup"/>
     </java>
 
     <java classname="org.tmatesoft.svn.cli.SVN"
           outputproperty="fse.diff.out"
           failonerror="true"
+          classpathref="fse.ivy.path.ant"
           fork="true">
-      <classpath refid="fse.java.classpath"/>
-
       <arg value="update"/>
     </java>
 
@@ -215,10 +214,9 @@
 
     <java classname="org.tmatesoft.svn.cli.SVN"
           outputproperty="fse.history.headRev"
+          classpathref="fse.ivy.path.ant"
           failonerror="true"
           fork="true">
-      <classpath refid="fse.java.classpath"/>
-
       <arg value="info"/>
       <arg value="--show-item"/>
       <arg value="revision"/>
@@ -241,9 +239,8 @@
 
     <java classname="org.tmatesoft.svn.cli.SVN"
           failonerror="true"
+          classpathref="fse.ivy.path.ant"
           fork="true">
-      <classpath refid="fse.java.classpath"/>
-
       <arg value="update"/>
       <arg value="-r"/>
       <arg value="PREV"/>
@@ -252,15 +249,15 @@
     <antcall target="-history-recursion-start" inheritAll="false" />
   </target>
 
-  <target name="-history-create-log" >
+  <target name="-history-create-log" if="${fse.history.hasErrors}" >
     <echo message="Found working version! Logging breaking changes..." />
 
     <loadfile property="fse.broken.rev" srcFile="${java.io.tmpdir}/${fse.history.broken_rev}"/>
 
     <java classname="org.tmatesoft.svn.cli.SVN" 
-          outputproperty="fse.history.workingRev" 
+          outputproperty="fse.history.workingRev"
+          classpathref="fse.ivy.path.ant"
           fork="true">
-      <classpath refid="fse.java.classpath"/>
       <arg value="info"/>
       <arg value="--show-item"/>
       <arg value="revision"/>
@@ -268,8 +265,8 @@
 
     <java classname="org.tmatesoft.svn.cli.SVN" 
           output="${fse.history.log}"
+          classpathref="fse.ivy.path.ant"
           fork="true">
-      <classpath refid="fse.java.classpath"/>
       <arg value="diff"/>
       <arg value="-r"/>
       <arg value="${fse.history.workingRev}:${fse.broken.rev}"/>
