@@ -8,59 +8,20 @@
     <success source="${fse.ant.resources}/sounds/build_success.wav" />
     <fail source="${fse.ant.resources}/sounds/build_fail.wav" />
   </sound>
-  <trycatch>
-    <try>
-      <antcall target="build" inheritAll="true"/>
-    </try>
-    <catch>
-      <fail message="[ERR] Compilation failure" />
-    </catch>
-    <finally>
-      <echo message="Done task 'music'!" />
-    </finally>
-  </trycatch>
+  <antcall target="build" />
 </target>
 \end{lstlisting}
 
 \subsubsection{Комментарии}
 
-\dots
+Для воспроизведения звуковых файлов используется задача \texttt{music}. Она входит в состав Apache Ant API и позволяет указать раличные файлы в случае успеха или неудачи сборки.
+
+Задача не сработает, если указать зависимость цели от \texttt{build}, поскольку она видит ошибки лишь в теле текущей цели. Если ошибка случится в теле более ранней цели, то выполнение до \texttt{music} не дойдёт, и сборка упадёт с ошибкой без воспроизведение звуков.
+
+Для решения этой проблемы достаточно вызвать цель \texttt{build} в теле текущей цели при помощи задачи \texttt{antcall} --- она также входит в состав Apache Ant API.
 
 \subsubsection{Значения используемых параметров}
 
 \begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
 fse.ant.resources = src/main/resources/ant
-\end{lstlisting}
-
-\subsubsection{Лог}
-
-\begin{lstlisting}[caption={Лог цели \texttt{music}},language={},captionpos=b]
-Buildfile: /project/build.xml
-
-music:
-
-compile:
-     [echo] Compiling the project from src...
-     [echo] Source Java: 17
-     [echo] Target Java: 17
-   [delete] Deleting directory /project/build
-    [mkdir] Created dir: /project/build
-    [javac] Compiling 22 source files to /project/build
-    [javac] warning: [options] system modules path not set in conjunction with -source 17
-    [javac] 1 warning
-     [echo] Done task 'compile'!
-
-build:
-     [echo] Building the project...
-   [delete] Deleting directory /project/target
-    [mkdir] Created dir: /project/target
-     [copy] Copying 8 files to /project/target
-     [copy] Copying 22 files to /project/target/WEB-INF/classes
-     [copy] Copying 32 files to /project/target/WEB-INF/lib
-      [jar] Building jar: /project/target/web3-1.0.0.war
-     [echo] Done task 'build'!
-     [echo] Done task 'music'!
-
-BUILD SUCCESSFUL
-Total time: 2 seconds
 \end{lstlisting}
