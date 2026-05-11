@@ -1,3 +1,66 @@
 \subsection{Цель \texttt{music}}
 
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<target name="music">
+  <sound>
+    <success source="${fse.ant.resources}/sounds/build_success.wav" />
+    <fail source="${fse.ant.resources}/sounds/build_fail.wav" />
+  </sound>
+  <trycatch>
+    <try>
+      <antcall target="build" inheritAll="true"/>
+    </try>
+    <catch>
+      <fail message="[ERR] Compilation failure" />
+    </catch>
+    <finally>
+      <echo message="Done task 'music'!" />
+    </finally>
+  </trycatch>
+</target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
 \dots
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.ant.resources = src/main/resources/ant
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{music}},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+music:
+
+compile:
+     [echo] Compiling the project from src...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+build:
+     [echo] Building the project...
+   [delete] Deleting directory /project/target
+    [mkdir] Created dir: /project/target
+     [copy] Copying 8 files to /project/target
+     [copy] Copying 22 files to /project/target/WEB-INF/classes
+     [copy] Copying 32 files to /project/target/WEB-INF/lib
+      [jar] Building jar: /project/target/web3-1.0.0.war
+     [echo] Done task 'build'!
+     [echo] Done task 'music'!
+
+BUILD SUCCESSFUL
+Total time: 2 seconds
+\end{lstlisting}

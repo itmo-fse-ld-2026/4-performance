@@ -1,3 +1,115 @@
 \subsection{Цель \texttt{alt}}
 
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<target name="alt">
+  <delete dir="${fse.alt.dir}" failonerror="false"/>
+  <mkdir dir="${fse.alt.dir}"/>
+
+  <echo message="Creating alternative version of project..." />
+
+  <copy todir="${fse.alt.dir}">
+    <fileset dir="src"/>
+  </copy>
+
+  <for list="${fse.alt.pairs}" param="pair" delimiter=",">
+    <sequential>
+      <local name="from"/>
+      <local name="to"/>
+
+      <propertyregex property="from"
+                      input="@{pair}"
+                      regexp="^(.+):"
+                      select="\1" />
+      <propertyregex property="to"
+                      input="@{pair}"
+                      regexp=":(.+)$"
+                      select="\1" />
+      <replaceregexp match="${from}" replace="${to}" flags="g" byline="true">
+        <fileset dir="${fse.alt.dir}">
+          <filename regex="${fse.alt.files}"/>
+        </fileset>
+      </replaceregexp>
+    </sequential>
+  </for>
+
+  <for list="${fse.alt.pairs}" param="pair" delimiter=",">
+    <sequential>
+      <local name="from"/>
+      <local name="to"/>
+
+      <propertyregex property="from"
+                      input="@{pair}"
+                      regexp="^(.+):"
+                      select="\1" />
+      <propertyregex property="to"
+                      input="@{pair}"
+                      regexp=":(.+)$"
+                      select="\1" />
+      
+      <move todir="${fse.alt.dir}">
+        <fileset dir="${fse.alt.dir}">
+          <include name="**/*"/>
+        </fileset>
+        <mapper type="regexp" from="^(.*)${from}(.*)$" to="\1${to}\2"/>
+      </move>
+    </sequential>
+  </for>
+
+  <antcall target="build">
+    <param name="fse.compile.source" value="${fse.alt.dir}" />
+
+    <param name="fse.build.version" value="${fse.build.version}-alt" />
+  </antcall>
+</target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
 \dots
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.alt.dir = alt-version
+fse.alt.files = .*(ResultDAO\.java|QuadrantShapeTemplate|).*
+fse.alt.pairs = ResultDAO:AltResultYayDAO,QuadrantShapeTemplate:QuadrantApeTemplate
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{alt}},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+alt:
+    [mkdir] Created dir: /project/alt-version
+     [echo] Creating alternative version of project...
+     [copy] Copying 39 files to /project/alt-version
+     [move] Moving 1 file to /project/alt-version
+     [move] Moving 1 file to /project/alt-version
+
+compile:
+     [echo] Compiling the project from alt-version...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+build:
+     [echo] Building the project...
+   [delete] Deleting directory /project/target
+    [mkdir] Created dir: /project/target
+     [copy] Copying 8 files to /project/target
+     [copy] Copying 22 files to /project/target/WEB-INF/classes
+     [copy] Copying 32 files to /project/target/WEB-INF/lib
+      [jar] Building jar: /project/target/web3-1.0.0-alt.war
+     [echo] Done task 'build'!
+
+BUILD SUCCESSFUL
+Total time: 3 seconds
+\end{lstlisting}
