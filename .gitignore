@@ -58,3 +58,4 @@ postgresql_db_data/
 sandbox/
 .ant
 build.properties
+build-test/
