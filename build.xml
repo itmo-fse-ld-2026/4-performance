@@ -98,7 +98,7 @@
     <delete dir="${fse.compile.target}"/>
     <delete dir="${fse.build.target}"/>
     <delete dir="${fse.alt.dir}"/>
-    <delete dir="${fse.test.target}"/>"
+    <delete dir="${fse.test.target}"/>
   </target>
 
   <target name="music">
@@ -350,4 +350,35 @@
       <arg value="run"/>
     </exec>
   </target>
+
+    <target name="test" depends="build">
+        <echo message="Running JUnit tests..."/>
+
+        <mkdir dir="${fse.test.target}"/>
+        <mkdir dir="${fse.test.reports.dir}"/>
+
+        <javac srcdir="${fse.test.source}"
+               destdir="${fse.test.target}"
+               source="${fse.compile.jvm.source}"
+               target="${fse.compile.jvm.target}"
+               includeantruntime="false">
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+                <pathelement location="${fse.compile.target}"/>
+            </classpath>
+        </javac>
+
+        <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+                <pathelement location="${fse.compile.target}"/>
+                <pathelement location="${fse.test.target}"/>
+            </classpath>
+            <arg value="--scan-classpath"/>
+            <arg value="--details=verbose"/>
+            <arg value="--reports-dir=${fse.test.reports.dir}"/>
+        </java>
+
+        <echo message="Done task 'test'!" />
+    </target>
 </project>
