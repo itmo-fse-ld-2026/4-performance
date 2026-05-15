@@ -47,3 +47,7 @@ fse.env.postgres.port = 12345
 fse.env.postgres.user = postgres
 fse.env.postgres.password = 12345
 fse.env.docker.tag = pr-2
+
+fse.test.source = src/test/java
+fse.test.target = build-test
+fse.test.reports.dir = ${fse.test.target}/reports
