@@ -4,7 +4,7 @@
 
 \begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
 <target name="history">
-  <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" failonerror="true"/>
+  <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
 
   <java classname="org.tmatesoft.svn.cli.SVN"
         fork="true"
@@ -23,7 +23,7 @@
 
   <antcall target="-history-recursion-start" />
 
-  <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" failonerror="true"/>
+  <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
 
   <echo message="Done task 'history'!"/>
 </target>
@@ -54,12 +54,9 @@
     <arg value="revision"/>
   </java>
 
-  <echo file="${java.io.tmpdir}/${fse.history.broken_rev}"
-        message="${fse.history.headRev}" />
-
   <condition property="fse.history.isNotLast">
     <not>
-      <equals arg1="${fse.history.headRev}" arg2="2"/>
+      <equals arg1="${fse.history.headRev}" arg2="${fse.history.startRev}"/>
     </not>
   </condition>
 
@@ -108,13 +105,26 @@
 
 \subsubsection{Комментарии}
 
-\dots
+Пожалуй, самая сложная задача в плане реализации логики, о чём можно судить по размеру листинга.
+
+Все взаимодействия с интерфейсом Subversion происходят через вызов Java-класса из сторонней библиотеки SVNKit \textit{(она добавлена при помощи Apache Ivy)}.
+
+В начале вызываем \texttt{svn cleanup} для снятия блокировок и выполнения незавершённых операций, затем синхронизируем рабочую копию проекта с удалённым репозиторием при помощи \texttt{svn update}.
+
+Логика основного алгоритма имеет рекурсивную природу, поэтому делегируем выполнение цели \texttt{-history-recursion-start}, которая пытается скомпилировать текущую версию проекта. Если всё получилось, то на этом выполнение завершается. Иначе фиксируем ошибку и вызываем цель \texttt{-history-check-if-last}, которая принимает решение о продолжении рекурсивного шага. Если ревизия не первая, то вызываем цель \texttt{-history-revert} для отката и делаем рекурсивный вызов. Как только дойдём до первой компилируемой ревизии, формируем файл с критическими изменениями при помощи цели \texttt{-history-create-log}. 
+
+Задачи применяются примитивные, их описание многократно упоминается в других разделах отчёта. Особенность этой цели в использовании системного свойства \texttt{java.io.tmpdir}: оно используется JVM для хранения временных данных. Оно нужно, чтобы хранить изменяемый номер критической ревизии в отдельном файле --- это сделано из-за ограничения на единоразовую инициализацию переменных в пределах одной цели. \texttt{brokenRev} многократно изменяется и считывается в самом конце для определения номера ревизии, с~которой будет вычисляться критическая разница в логе.
+
+Ещё используется задача \texttt{trycatch} из сторонней библиотеки \textit{Ant-Contrib} \textit{(добавлена при помощи Apache Ivy)}. Она позволяет обработать ошибку и выполнить определённые задачи в случае неудачной компиляции текущей версии проекта \textit{(иначе цель просто упадёт с ошибкой)}.
+
+Наконец, для определения критических изменений используется команда \texttt{svn diff}, которой передаются номера сравниваемых ревизий через ключ \texttt{-r}.
 
 \subsubsection{Значения используемых параметров}
 
 \begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
 fse.history.log = breaking_changes.log
 fse.history.broken_rev = .broken_rev.flag
+fse.history.startRev = 2
 \end{lstlisting}
 
 \subsubsection{Лог}
