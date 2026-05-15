@@ -31,6 +31,7 @@ fse.scp.ssh.key = .ssh/key
 fse.diff.classes = .*(models|ResultDAO\\.java).*
 fse.history.log = breaking_changes.log
 fse.history.broken_rev = .broken_rev.flag
+fse.history.startRev = 2
 
 fse.alt.dir = alt-version
 fse.alt.files = .*(ResultDAO\.java|QuadrantShapeTemplate|).*
