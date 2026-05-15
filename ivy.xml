@@ -19,6 +19,7 @@
     <dependency org="com.github.mwiede" name="jsch" rev="2.28.2" conf="ant->default" />
     <!-- for test goals -->
     <dependency org="org.junit.jupiter" name="junit-jupiter" rev="5.10.2" conf="compile->default" />
+    <dependency org="org.junit.platform" name="junit-platform-console" rev="1.10.2" conf="compile->default" />
     <dependency org="org.mockito" name="mockito-core" rev="5.11.0" conf="compile->default" />
     <dependency org="org.mockito" name="mockito-junit-jupiter" rev="5.11.0" conf="compile->default" />
 
