@@ -98,6 +98,7 @@
     <delete dir="${fse.compile.target}"/>
     <delete dir="${fse.build.target}"/>
     <delete dir="${fse.alt.dir}"/>
+    <delete dir="${fse.test.target}"/>"
   </target>
 
   <target name="music">
