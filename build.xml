@@ -393,4 +393,57 @@
 
         <echo message="Done task 'xml'!" />
     </target>
+
+    <target name="doc" depends="build">
+        <echo message="Generating JavaDoc documentation..."/>
+
+        <mkdir dir="${fse.doc.dir}"/>
+        <javadoc sourcepath="${fse.compile.source}/main/java"
+                 destdir="${fse.doc.dir}"
+                 source="${fse.compile.jvm.source}"
+                 windowtitle="${fse.doc.windowtitle}"
+                 header="${fse.doc.header}"
+                 encoding="${fse.doc.encoding}"
+                 charset="${fse.doc.encoding}"
+                 docencoding="${fse.doc.encoding}"
+                 failonerror="false"
+                 access="private">
+            <packageset dir="${fse.compile.source}/main/java" defaultexcludes="yes">
+                <include name="weblab/**"/>
+            </packageset>
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+            </classpath>
+        </javadoc>
+
+        <checksum algorithm="MD5" fileext=".md5">
+            <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
+        </checksum>
+
+        <checksum algorithm="SHA-1" fileext=".sha1">
+            <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
+        </checksum>
+
+        <copy todir="${fse.build.target}/docs/javadoc">
+            <fileset dir="${fse.doc.dir}"/>
+        </copy>
+
+        <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
+             update="true"
+             basedir="${fse.build.target}"
+             includes="docs/**"/>
+
+        <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
+             update="true">
+            <manifest>
+                <attribute name="Documentation" value="JavaDoc included in docs/javadoc"/>
+                <attribute name="Doc-Generated" value="${TODAY}"/>
+                <attribute name="Doc-Encoding" value="${fse.doc.encoding}"/>
+                <attribute name="MD5-Checksums" value="Generated for all Java files"/>
+                <attribute name="SHA1-Checksums" value="Generated for all Java files"/>
+            </manifest>
+        </jar>
+
+        <echo message="Done task 'doc'!" />
+    </target>
 </project>

@@ -55,3 +55,10 @@ fse.test.reports.dir = ${fse.test.target}/reports
 fse.xml.includes = **/*.xml,**/*.xhtml
 fse.xml.excludes = build-test/**,build/**,target/**,alt-version/**,.ant/**,sandbox/**
 fse.xml.root.includes = *.xml
+
+fse.doc.dir = docs/javadoc
+fse.doc.windowtitle = ${fse.build.title} API Documentation
+fse.doc.header = ${fse.build.title}
+fse.doc.footer = ${fse.build.vendor}
+fse.doc.encoding = UTF-8
+fse.doc.keys = **/*.md5, **/*.sha1
