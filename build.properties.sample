@@ -51,3 +51,7 @@ fse.env.docker.tag = pr-2
 fse.test.source = src/test/java
 fse.test.target = build-test
 fse.test.reports.dir = ${fse.test.target}/reports
+
+fse.xml.includes = **/*.xml,**/*.xhtml
+fse.xml.excludes = build-test/**,build/**,target/**,alt-version/**,.ant/**,sandbox/**
+fse.xml.root.includes = *.xml
