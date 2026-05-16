@@ -9,6 +9,9 @@ FROM python:3.11-slim
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   subversion \
+  # adding git for reading .gitignore file
+  # without suffer (lazy solution)
+  git \
   make \
   ant \
   ant-optional && \
@@ -20,9 +23,36 @@ WORKDIR /project
 COPY src/main/resources/python/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# for ant's "music" goal
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
-  libasound2 && \
+  # for ant's "music" goal
+  libasound2 \ 
+  # for Apache Ivy installation
+  unzip \
+  curl && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
+
+# Apache Ivy installation
+RUN curl -o ivy.zip https://dlcdn.apache.org//ant/ivy/2.5.3/apache-ivy-2.5.3-bin.zip && \
+  unzip ivy.zip && \
+  mkdir -p /ant/lib && \
+  mv apache-ivy-2.5.3/ivy-2.5.3.jar /ant/lib
+
+# Docker CLI & Compose installation
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    lsb-release && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+RUN apt-get update && apt-get install -y \
+    docker-ce-cli \
+    docker-compose-plugin && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*

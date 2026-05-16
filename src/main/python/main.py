@@ -29,6 +29,10 @@ def main():
     'POSTGRES_PASSWORD': postgres_password,
   }
 
+  java_opts = os.environ.get('JAVA_OPTS')
+  if java_opts:
+    context['JAVA_OPTS'] = java_opts
+
   artifact_filler = ArtifactFiller(context, ['./src', './report'])
   artifact_filler.compile_patterns()
 

@@ -97,6 +97,10 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v6
+      
+      - name: Copy sample build.properties
+        run: |
+          cp build.properties.sample build.properties
 
       - name: Compile PDF
         run: |

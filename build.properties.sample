@@ -1,0 +1,50 @@
+fse.pdf.report_dir = report/
+fse.pdf.report_name = main
+
+fse.ant.home = /.ant
+fse.ant.resources = src/main/resources/ant
+
+fse.svn.sandbox.dir = sandbox
+fse.svn.sandbox.remote = remote
+fse.svn.sandbox.local = local
+
+fse.compile.source = src
+fse.compile.target = build
+fse.compile.jvm.source = 17
+fse.compile.jvm.target = 17
+
+fse.build.source = build
+fse.build.target = target
+fse.build.name = web3
+fse.build.main = 
+fse.build.version = 1.0.0
+fse.build.title = FSE Lab #3
+fse.build.vendor = ITMO FSE LD 2026
+fse.build.webapp = src/main/webapp
+
+fse.scp.file.regex = .*(war).*
+fse.scp.file.todir = ~
+fse.scp.ssh.host = s466449@cs.ifmo.ru
+fse.scp.ssh.port = 2222
+fse.scp.ssh.key = .ssh/key
+
+fse.diff.classes = .*(models|ResultDAO\\.java).*
+fse.history.log = breaking_changes.log
+fse.history.broken_rev = .broken_rev.flag
+fse.history.startRev = 2
+
+fse.alt.dir = alt-version
+fse.alt.files = .*(ResultDAO\.java|QuadrantShapeTemplate|).*
+fse.alt.pairs = ResultDAO:AltResultYayDAO,QuadrantShapeTemplate:QuadrantApeTemplate
+
+fse.env.jvm.source = 19
+fse.env.jvm.target = 19
+fse.env.jvm.home = /opt/java/openjdk
+fse.env.jvm.args = -Xmx2048m
+
+fse.env.postgres.host = some-host
+fse.env.postgres.db = 
+fse.env.postgres.port = 12345
+fse.env.postgres.user = postgres
+fse.env.postgres.password = 12345
+fse.env.docker.tag = pr-2

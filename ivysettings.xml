@@ -1,0 +1,12 @@
+<ivysettings>
+  <caches defaultCacheDir="${fse.ant.home}/.ivy2/cache" />
+  <settings defaultResolver="my-chain"/>
+  <resolvers>
+    <chain name="my-chain">
+      <filesystem name="local" />
+      <ibiblio name="central" 
+               root="https://repo1.maven.org/maven2/" 
+               m2compatible="true"/>
+    </chain>
+  </resolvers>
+</ivysettings>
