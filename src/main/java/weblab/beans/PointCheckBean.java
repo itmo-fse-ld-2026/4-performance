@@ -19,6 +19,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * JSF-бин для проверки попадания точек в область на графике.
+ *
+ * <p>Бин является {@link RequestScoped} и обрабатывает отправку форм,
+ * клики по графику и пакетную проверку точек. Использует сервис
+ * {@link AreaCheckService} для проверки попадания и {@link HistoryBean}
+ * для сохранения результатов.</p>
+ *
+ * <p>Область проверки состоит из трёх фигур:
+ * <ul>
+ *   <li>Треугольник в квадранте 1 (основание = R, высота = R/2)</li>
+ *   <li>Прямоугольник в квадранте 2 (R x R)</li>
+ *   <li>Четверть круга в квадранте 4 (радиус = R/2)</li>
+ * </ul>
+ * </p>
+ *
+ * @author Vladislav Dyadev
+ * @version 1.0
+ * @see AreaCheckService
+ * @see HistoryBean
+ * @see PointValidationBean
+ */
 @Named("pointCheckBean")
 @RequestScoped
 public class PointCheckBean {
@@ -30,6 +52,7 @@ public class PointCheckBean {
 
     private List<Point> points = new ArrayList<>();
     private boolean graphClick = false;
+
     private final AreaCheckService areaCheckService = new AreaCheckService(List.of(
             new QuadrantShapeTemplate(new TriangleFactory(1.0, 0.5), 1),
             new QuadrantShapeTemplate(new RectangleFactory(1.0, 1.0), 2),
@@ -58,7 +81,7 @@ public class PointCheckBean {
 
     public boolean[] getRValues() { return rValues; }
     public void setRValues(boolean[] rValues) { this.rValues = rValues; }
-    
+
     // Именованные свойства для JSF
     public boolean getZero() { return rValues[0]; }
     public void setZero(boolean value) { rValues[0] = value; }
@@ -84,12 +107,25 @@ public class PointCheckBean {
     public Double getGraphR() { return graphR; }
     public void setGraphR(Double graphR) { this.graphR = graphR; }
 
+    // ==================== Business Methods ====================
+
+    /**
+     * Обрабатывает отправку формы из графика (клик по графику).
+     *
+     * <p>Получает координаты X, Y и R из компонента графика,
+     * нормализует их (X и Y ограничиваются диапазоном [-6, 6],
+     * R округляется до ближайшего допустимого значения),
+     * выполняет проверку попадания и сохраняет результат.</p>
+     *
+     * <p>В случае ошибки валидации или некорректного значения R
+     * в JSF-контекст добавляется сообщение об ошибке.</p>
+     */
     public void submitFromGraph() {
         FacesContext context = FacesContext.getCurrentInstance();
-        
+
         if (graphX == null || graphY == null || graphR == null) {
-            context.addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Не удалось получить координаты из графика", null));
+            context.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Не удалось получить координаты из графика", null));
             return;
         }
 
@@ -98,8 +134,8 @@ public class PointCheckBean {
             sessionID = context.getExternalContext().getSessionId(true);
         }
 
-    double x = Math.max(-6.0, Math.min(6.0, graphX));
-    double y = Math.max(-6.0, Math.min(6.0, graphY));
+        double x = Math.max(-6.0, Math.min(6.0, graphX));
+        double y = Math.max(-6.0, Math.min(6.0, graphY));
 
         double[] validR = {1.0, 1.5, 2.0, 2.5, 3.0};
         boolean validRValue = false;
@@ -111,7 +147,7 @@ public class PointCheckBean {
                 break;
             }
         }
-        
+
         if (!validRValue) {
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     String.format("Некорректное значение R: %.3f", graphR), null));
@@ -135,6 +171,22 @@ public class PointCheckBean {
         historyBean.saveBatch(entries);
     }
 
+    /**
+     * Обрабатывает отправку формы с заданными значениями координат.
+     *
+     * <p>Метод вызывается из JSF-формы. Выполняет валидацию входных данных:
+     * <ul>
+     *   <li>Проверяет, что X введён и является числом</li>
+     *   <li>Проверяет, что выбрано хотя бы одно значение R</li>
+     *   <li>Валидирует все точки через {@link PointValidationBean#validateForm(Point)}</li>
+     * </ul>
+     * </p>
+     *
+     * <p>Для каждого выбранного значения R создаётся точка с одинаковыми X и Y,
+     * выполняется проверка попадания и сохраняются результаты.</p>
+     *
+     * @param y значение координаты Y (целое число от -3 до 5)
+     */
     public void submitForm(int y) {
         FacesContext context = FacesContext.getCurrentInstance();
         String sessionID = context.getExternalContext().getSessionId(false);
@@ -201,6 +253,23 @@ public class PointCheckBean {
         historyBean.saveBatch(entries);
     }
 
+    /**
+     * Обрабатывает пакетную проверку точек.
+     *
+     * <p>Проверяет список точек, накопленных в поле {@code points}.
+     * В зависимости от флага {@code graphClick} использует соответствующую
+     * валидацию: для клика по графику проверяются границы видимой области,
+     * для формы — стандартные границы.</p>
+     *
+     * <p>Если есть некорректные точки, в JSF-контекст добавляется сообщение
+     * об ошибке со списком проблемных точек.</p>
+     *
+     * @param graphXMin минимальная граница X для клика по графику
+     * @param graphXMax максимальная граница X для клика по графику
+     * @param graphYMin минимальная граница Y для клика по графику
+     * @param graphYMax максимальная граница Y для клика по графику
+     * @param sessionID идентификатор HTTP-сессии
+     */
     public void submitPoints(double graphXMin, double graphXMax, double graphYMin, double graphYMax, String sessionID) {
         FacesContext context = FacesContext.getCurrentInstance();
 

@@ -2,17 +2,70 @@ package weblab.shapes.templates;
 
 import weblab.models.Point;
 
+/**
+ * Фигура, представляющая прямоугольный треугольник в первом квадранте.
+ *
+ * <p>Треугольник расположен в первом квадранте системы координат
+ * с вершинами:
+ * <ul>
+ *   <li>вершина A: (0, 0) — начало координат</li>
+ *   <li>вершина B: (base, 0) — на оси X</li>
+ *   <li>вершина C: (0, height) — на оси Y</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Гипотенуза проходит от точки (base, 0) до (0, height) и описывается
+ * уравнением: y = (-height/base) * x + height.</p>
+ *
+ * <p>Точка считается попавшей, если она находится в первом квадранте,
+ * не выходит за пределы основания и высоты, и находится ниже или на гипотенузе.
+ * Границы (включая гипотенузу) считаются попаданием.</p>
+ *
+ * <p>Используется в комбинации с {@link QuadrantShape} для размещения
+ * в других квадрантах.</p>
+ *
+ * @author Vladislav Dyadev
+ * @version 1.0
+ * @see Shape
+ * @see QuadrantShape
+ */
 public class Triangle implements Shape {
     private final double base;
     private final double height;
 
+    /**
+     * Конструктор треугольника.
+     *
+     * @param base   основание треугольника (откладывается по оси X, положительное число)
+     * @param height высота треугольника (откладывается по оси Y, положительное число)
+     */
     public Triangle(double base, double height) {
         this.base = base;
         this.height = height;
     }
 
+    /**
+     * Проверяет, находится ли точка внутри прямоугольного треугольника.
+     *
+     * <p>Условия попадания:
+     * <ul>
+     *   <li>X координата неотрицательна (x ≥ 0)</li>
+     *   <li>Y координата неотрицательна (y ≥ 0)</li>
+     *   <li>X координата не превышает основание (x ≤ base)</li>
+     *   <li>Y координата не превышает высоту (y ≤ height)</li>
+     *   <li>Точка находится на гипотенузе или ниже неё:
+     *       y ≤ (-height/base) * x + height</li>
+     * </ul>
+     * </p>
+     *
+     * @param p проверяемая точка
+     * @return {@code true}, если точка находится внутри или на границе треугольника,
+     *         {@code false} в противном случае
+     */
     @Override
     public boolean contains(Point p) {
-        return p.x() >= 0 && p.y() >= 0 && p.x() <= base && p.y() <= height && p.y() <= (-height / base) * p.x() + height;
+        return p.x() >= 0 && p.y() >= 0 &&
+                p.x() <= base && p.y() <= height &&
+                p.y() <= (-height / base) * p.x() + height;
     }
 }

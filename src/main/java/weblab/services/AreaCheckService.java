@@ -9,13 +9,52 @@ import weblab.shapes.templates.Shape;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Сервис для проверки попадания списка точек в область.
+ *
+ * <p>Основной сервис приложения, который координирует процесс проверки точек.
+ * Для каждой точки создаёт соответствующие фигуры через фабрики и шаблоны,
+ * затем использует {@link HitChecker} для определения факта попадания.</p>
+ *
+ * <p>Алгоритм работы:
+ * <ol>
+ *   <li>Для каждой точки создаются фигуры во всех заданных квадрантах</li>
+ *   <li>Размеры фигур масштабируются в зависимости от значения R точки</li>
+ *   <li>Создаётся {@link HitChecker} с набором фигур для точки</li>
+ *   <li>Выполняется проверка попадания</li>
+ *   <li>Результат упаковывается в {@link CheckResult}</li>
+ * </ol>
+ * </p>
+ *
+ * @author Vladislav Dyadev
+ * @version 1.0
+ * @see QuadrantShapeTemplate
+ * @see HitChecker
+ * @see CheckResult
+ */
 public class AreaCheckService {
     private final List<QuadrantShapeTemplate> shapeTemplates;
 
+    /**
+     * Конструктор сервиса проверки области.
+     *
+     * @param shapeTemplates список шаблонов фигур по квадрантам
+     *                       (определяет, какие фигуры и в каких квадрантах будут проверяться)
+     */
     public AreaCheckService(List<QuadrantShapeTemplate> shapeTemplates) {
         this.shapeTemplates = shapeTemplates;
     }
 
+    /**
+     * Проверяет список точек на попадание в область.
+     *
+     * <p>Для каждой точки создаются фигуры с масштабированием относительно значения R,
+     * затем выполняется проверка попадания. Результаты возвращаются в том же порядке,
+     * в котором были переданы точки.</p>
+     *
+     * @param points список точек для проверки (может быть пустым, но не {@code null})
+     * @return список результатов проверки для каждой точки
+     */
     public List<CheckResult> checkPoints(List<Point> points) {
         List<CheckResult> results = new ArrayList<>();
         for (Point p : points) {
