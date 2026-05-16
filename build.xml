@@ -470,4 +470,31 @@
 
         <echo message="Done task 'doc'!" />
     </target>
+
+    <target name="report" depends="test">
+        <echo message="Saving test reports to SVN..."/>
+
+        <!-- Добавляем отчеты в SVN -->
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              failonerror="false"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="add"/>
+            <arg value="--force"/>
+            <arg value="${fse.test.reports.dir}"/>
+        </java>
+
+        <!-- Коммитим отчеты -->
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              failonerror="true"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="commit"/>
+            <arg value="-m"/>
+            <arg value="feat: add test reports (Ant-automated)"/>
+            <arg value="${fse.test.reports.dir}"/>
+        </java>
+
+        <echo message="Done task 'report'!" />
+    </target>
 </project>
