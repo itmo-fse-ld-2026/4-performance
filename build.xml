@@ -99,6 +99,10 @@
     <delete dir="${fse.build.target}"/>
     <delete dir="${fse.alt.dir}"/>
     <delete dir="${fse.test.target}"/>
+    <delete dir="${fse.doc.dir}/.."/>
+    <delete>
+        <fileset dir="${fse.compile.source}" includes="**/*.md5,**/*.sha1"/>
+    </delete>
   </target>
 
   <target name="music">
