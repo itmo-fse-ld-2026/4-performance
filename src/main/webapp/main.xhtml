@@ -1,25 +1,37 @@
 <!DOCTYPE html>
-<html lang="ru"
+<html lang="#{localeBean.language}"
         xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="jakarta.faces.core"
       xmlns:h="jakarta.faces.html"
         xmlns:ui="jakarta.faces.facelets">
-<f:view>
+<f:view locale="#{localeBean.locale}">
     <h:head>
-        <title>HitChecker</title>
+        <title>#{msg['page.main.title']}</title>
         <h:outputStylesheet library="css" name="styles.css" />
         <h:outputScript library="js" name="app.js" target="body" />
     </h:head>
 
     <h:body>
         <div id="notifications-container"></div>
-        
+        <div id="app-messages" hidden="hidden"
+             data-select-r="#{msg['js.error.select.r']}"
+             data-coords-range="#{msg['js.error.coords.range']}"
+             data-enter-x="#{msg['js.error.enter.x']}"
+             data-invalid-x="#{msg['js.error.invalid.x']}"/>
+
         <header>
             <div class="header-left">
-                <h1>Дядев Владислав • Лабин Макар • P3231 • Вариант 590834</h1>
+                <h1>#{msg['page.header.students']}</h1>
             </div>
             <div class="header-right">
-                <h:link outcome="index" value="← На главную" styleClass="btn-link" />
+                <h:form id="localeForm" styleClass="locale-form">
+                    <h:selectOneMenu value="#{localeBean.language}" styleClass="locale-select">
+                        <f:selectItem itemValue="ru" itemLabel="RU"/>
+                        <f:selectItem itemValue="en" itemLabel="EN"/>
+                        <f:ajax event="change" listener="#{localeBean.applyLocale}" render="@all"/>
+                    </h:selectOneMenu>
+                </h:form>
+                <h:link outcome="index" value="#{msg['page.main.back']}" styleClass="btn-link" />
             </div>
         </header>
 
@@ -30,7 +42,7 @@
 
                         <!-- Выбор R -->
                         <div class="form-group" id="rGroup">
-                            <label>R:</label>
+                            <label>#{msg['label.r']}</label>
                             <div class="r-option">
                                 <h:selectBooleanCheckbox id="r1" value="#{pointCheckBean.zero}" />
                                 <label for="r1">1</label>
@@ -55,15 +67,15 @@
 
                         <!-- Ввод X -->
                         <div class="form-group" id="xGroup">
-                            <label for="xInput">X:</label>
+                            <label for="xInput">#{msg['label.x']}</label>
                             <h:inputText id="xInput" value="#{pointCheckBean.selectedX}" required="true">
-                                <f:passThroughAttribute name="placeholder" value="-3 ... 5" />
+                                <f:passThroughAttribute name="placeholder" value="#{msg['label.x.placeholder']}" />
                             </h:inputText>
                         </div>
 
                         <!-- Кнопки Y -->
                         <div class="form-group">
-                            <label>Y (нажмите для отправки формы):</label>
+                            <label>#{msg['label.y']}</label>
                             <div class="y-buttons">
                                 <h:commandButton value="-3" action="#{pointCheckBean.submitForm(-3)}" styleClass="btn">
                                     <f:ajax execute="@form" render=":jsf-errors-container :history-table-panel" />
@@ -119,9 +131,10 @@
 
             <section class="history">
                 <div class="history-header">
-                    <h2>История попаданий</h2>
+                    <h2>#{msg['history.title']}</h2>
                     <h:form>
-                        <h:commandButton value="🗑 Очистить" action="#{historyBean.clearAll()}" styleClass="btn">
+                        <h:commandButton value="#{msg['history.clear']}" action="#{historyBean.clearAll()}"
+                                         styleClass="btn" data-action="clear-history">
                             <f:ajax execute="@this" render=":history-table-panel" />
                         </h:commandButton>
                     </h:form>
@@ -132,19 +145,19 @@
                         <table id="history-table">
                             <thead>
                                 <tr>
-                                    <th>Время</th>
-                                    <th>Результат</th>
-                                    <th>X</th>
-                                    <th>Y</th>
-                                    <th>R</th>
-                                    <th>Время выполнения (мс)</th>
+                                    <th>#{msg['history.col.time']}</th>
+                                    <th>#{msg['history.col.result']}</th>
+                                    <th>#{msg['history.col.x']}</th>
+                                    <th>#{msg['history.col.y']}</th>
+                                    <th>#{msg['history.col.r']}</th>
+                                    <th>#{msg['history.col.exec']}</th>
                                 </tr>
                             </thead>
                             <tbody id="history-table-body">
                                 <ui:repeat value="#{historyBean.entries}" var="entry" id="history-repeat">
                                     <tr class="history-item #{entry.result() ? 'hit' : 'miss'}" data-session-id="#{entry.sessionId()}">
                                         <td>#{entry.timestamp()}</td>
-                                        <td>#{entry.result() ? 'Попал 🎯' : 'Мимо ❌'}</td>
+                                        <td>#{entry.result() ? msg['history.hit'] : msg['history.miss']}</td>
                                         <td>#{entry.point().x()}</td>
                                         <td>#{entry.point().y()}</td>
                                         <td>#{entry.point().r()}</td>
@@ -154,7 +167,7 @@
                                 <!-- Статическая строка по умолчанию, чтобы пользователь видел "История пуста" сразу при загрузке.
                                      JS код удалит эту строку, как только появятся реальные записи с классом .history-item -->
                                 <tr class="history-empty">
-                                    <td colspan="6" style="text-align: center; padding: 2rem;">История пуста</td>
+                                    <td colspan="6" style="text-align: center; padding: 2rem;">#{msg['history.empty']}</td>
                                 </tr>
                                 <ui:fragment rendered="#{empty historyBean.entries}">
                                     <!-- Серверный fallback — оставлен для совместимости -->

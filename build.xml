@@ -28,7 +28,22 @@
         pattern="${fse.ant.home}/compile/[artifact]-[revision](-[classifier]).[ext]" />
   </target>
 
-  <target name="compile">
+  <target name="native2ascii">
+    <echo message="Converting localization files from ${fse.i18n.native.dir} to ${fse.i18n.target.dir}..."/>
+
+    <delete dir="${fse.i18n.target.dir}" />
+    <mkdir dir="${fse.i18n.target.dir}" />
+
+    <native2ascii encoding="${fse.i18n.encoding}"
+                  src="${fse.i18n.native.dir}"
+                  dest="${fse.i18n.target.dir}"
+                  includes="${fse.i18n.includes}"
+                  ext="${fse.i18n.ext}"/>
+
+    <echo message="Done task 'native2ascii'!" />
+  </target>
+
+  <target name="compile" depends="native2ascii">
     <echo message="Compiling the project from ${fse.compile.source}..."/>
 
     <echo message="Source Java: ${fse.compile.jvm.source}"/>
@@ -36,6 +51,10 @@
 
     <delete dir="${fse.compile.target}" />
     <mkdir dir="${fse.compile.target}" />
+
+    <copy todir="${fse.compile.target}">
+      <fileset dir="${fse.i18n.target.dir}"/>
+    </copy>
 
     <javac srcdir="${fse.compile.source}"
            destdir="${fse.compile.target}"
@@ -98,6 +117,7 @@
     <delete dir="${fse.compile.target}"/>
     <delete dir="${fse.build.target}"/>
     <delete dir="${fse.alt.dir}"/>
+    <delete dir="${fse.i18n.target.dir}"/>
     <delete dir="${fse.test.target}"/>
     <delete dir="${fse.doc.dir}/.."/>
     <delete>

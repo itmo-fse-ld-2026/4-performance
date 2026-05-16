@@ -10,6 +10,12 @@ fse.svn.sandbox.local = local
 
 fse.compile.source = src
 fse.compile.target = build
+
+fse.i18n.native.dir = src/main/i18n-native
+fse.i18n.target.dir = build-i18n
+fse.i18n.includes = weblab/messages*.properties
+fse.i18n.encoding = UTF-8
+fse.i18n.ext = .properties
 fse.compile.jvm.source = 17
 fse.compile.jvm.target = 17
 

@@ -5,6 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import weblab.i18n.Messages;
 import weblab.models.CheckResult;
 import weblab.models.HistoryEntry;
 import weblab.models.Point;
@@ -125,7 +126,7 @@ public class PointCheckBean {
 
         if (graphX == null || graphY == null || graphR == null) {
             context.addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Не удалось получить координаты из графика", null));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, Messages.get("error.graph.coords"), null));
             return;
         }
 
@@ -150,7 +151,7 @@ public class PointCheckBean {
 
         if (!validRValue) {
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    String.format("Некорректное значение R: %.3f", graphR), null));
+                    Messages.format("error.invalid.r", graphR), null));
             return;
         }
 
@@ -201,12 +202,12 @@ public class PointCheckBean {
         }
 
         if (selectedX == null || selectedX.trim().isEmpty()) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Введите X", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, Messages.get("error.enter.x"), null));
             return;
         }
 
         if (selectedRValues.isEmpty()) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Выберите хотя бы одно значение R", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, Messages.get("error.select.r"), null));
             return;
         }
 
@@ -214,7 +215,7 @@ public class PointCheckBean {
         try {
             x = Double.parseDouble(selectedX.trim().replace(',', '.'));
         } catch (NumberFormatException e) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Некорректное значение X", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, Messages.get("error.invalid.x"), null));
             return;
         }
 
@@ -229,12 +230,10 @@ public class PointCheckBean {
                 .toList();
 
         if (!invalidPoints.isEmpty()) {
-            String message = invalidPoints.stream()
-                    .map(p -> String.format("(x=%.3f, y=%.3f, r=%.3f)", p.x(), p.y(), p.r()))
-                    .collect(Collectors.joining("; "));
+            String message = formatInvalidPoints(invalidPoints);
             context.addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Некорректные точки: " + message, null));
+                            Messages.format("error.invalid.points", message), null));
             return;
         }
 
@@ -274,7 +273,7 @@ public class PointCheckBean {
         FacesContext context = FacesContext.getCurrentInstance();
 
         if (points == null || points.isEmpty()) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Нет точек для проверки", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, Messages.get("error.no.points"), null));
             return;
         }
 
@@ -285,12 +284,10 @@ public class PointCheckBean {
                 .toList();
 
         if (!invalidPoints.isEmpty()) {
-            String message = invalidPoints.stream()
-                    .map(p -> String.format("(x=%.3f, y=%.3f, r=%.3f)", p.x(), p.y(), p.r()))
-                    .collect(Collectors.joining("; "));
+            String message = formatInvalidPoints(invalidPoints);
             context.addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Некорректные точки: " + message, null));
+                            Messages.format("error.invalid.points", message), null));
             return;
         }
 
@@ -306,5 +303,11 @@ public class PointCheckBean {
                 .toList();
 
         historyBean.saveBatch(entries);
+    }
+
+    private static String formatInvalidPoints(List<Point> invalidPoints) {
+        return invalidPoints.stream()
+                .map(p -> Messages.format("point.format", p.x(), p.y(), p.r()))
+                .collect(Collectors.joining("; "));
     }
 }

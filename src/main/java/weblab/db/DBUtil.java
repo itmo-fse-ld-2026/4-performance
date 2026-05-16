@@ -1,5 +1,7 @@
 package weblab.db;
 
+import weblab.i18n.Messages;
+
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -58,7 +60,7 @@ public class DBUtil {
      *         или произошла ошибка при получении соединения
      */
     public static Connection getConnection() throws SQLException {
-        if (ds == null) throw new SQLException("DataSource is not initialized");
+        if (ds == null) throw new SQLException(Messages.get("error.datasource.not.initialized"));
         return ds.getConnection();
     }
 
