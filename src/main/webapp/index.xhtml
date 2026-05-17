@@ -2,8 +2,7 @@
 <html lang="#{localeBean.language}"
       xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="jakarta.faces.core"
-      xmlns:h="jakarta.faces.html"
->
+      xmlns:h="jakarta.faces.html">
 <f:view locale="#{localeBean.locale}">
     <h:head>
         <title>#{msg['page.index.title']}</title>
@@ -13,14 +12,17 @@
     <h:body>
         <header>
             <div class="header-left">
-                <h1>#{msg['page.header.students']}</h1>
+                <h1><h:panelGroup id="headerTitle" layout="span">#{msg['page.header.students']}</h:panelGroup></h1>
             </div>
             <div class="header-right">
                 <h:form id="localeForm" styleClass="locale-form">
                     <h:selectOneMenu value="#{localeBean.language}" styleClass="locale-select">
                         <f:selectItem itemValue="ru" itemLabel="RU"/>
                         <f:selectItem itemValue="en" itemLabel="EN"/>
-                        <f:ajax event="change" listener="#{localeBean.applyLocale}" render="@all"/>
+                        <!-- Target the script element and explicit span containers -->
+                        <f:ajax event="change" 
+                                listener="#{localeBean.applyLocale}" 
+                                render=":titleScript :headerTitle :indexPrompt :mainPageLink"/>
                     </h:selectOneMenu>
                 </h:form>
                 <div id="clock"></div>
@@ -28,10 +30,19 @@
         </header>
         <main class="index-main">
             <div class="card" style="text-align: center">
-                <h2>#{msg['page.index.prompt']}</h2>
-                <h:link outcome="main" value="#{msg['page.index.link.main']}" styleClass="btn-link" />
+                <h2><h:panelGroup id="indexPrompt" layout="span">#{msg['page.index.prompt']}</h:panelGroup></h2>
+                
+                <!-- Component link updates naturally by targeting its own client ID -->
+                <h:link id="mainPageLink" outcome="main" value="#{msg['page.index.link.main']}" styleClass="btn-link" />
             </div>
         </main>
+
+        <!-- Dynamic Title Updater: Executes instantly on Ajax callback to change browser title safely -->
+        <h:panelGroup id="titleScript">
+            <script type="text/javascript">
+                document.title = "#{msg['page.index.title']}";
+            </script>
+        </h:panelGroup>
     </h:body>
 </f:view>
 </html>

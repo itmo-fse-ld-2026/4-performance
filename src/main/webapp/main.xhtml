@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="#{localeBean.language}"
-        xmlns="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="jakarta.faces.core"
       xmlns:h="jakarta.faces.html"
-        xmlns:ui="jakarta.faces.facelets">
+      xmlns:ui="jakarta.faces.facelets">
 <f:view locale="#{localeBean.locale}">
     <h:head>
         <title>#{msg['page.main.title']}</title>
@@ -13,25 +13,33 @@
 
     <h:body>
         <div id="notifications-container"></div>
-        <div id="app-messages" hidden="hidden"
-             data-select-r="#{msg['js.error.select.r']}"
-             data-coords-range="#{msg['js.error.coords.range']}"
-             data-enter-x="#{msg['js.error.enter.x']}"
-             data-invalid-x="#{msg['js.error.invalid.x']}"/>
+        
+        <h:panelGroup id="app-messages" layout="block">
+            <f:passThroughAttribute name="hidden" value="hidden" />
+            <f:passThroughAttribute name="data-select-r" value="#{msg['js.error.select.r']}" />
+            <f:passThroughAttribute name="data-coords-range" value="#{msg['js.error.coords.range']}" />
+            <f:passThroughAttribute name="data-enter-x" value="#{msg['js.error.enter.x']}" />
+            <f:passThroughAttribute name="data-invalid-x" value="#{msg['js.error.invalid.x']}" />
+        </h:panelGroup>
 
         <header>
             <div class="header-left">
-                <h1>#{msg['page.header.students']}</h1>
+                <!-- Surgically localized h1 text node -->
+                <h1><h:outputText id="headerTitle" value="#{msg['page.header.students']}" /></h1>
             </div>
             <div class="header-right">
                 <h:form id="localeForm" styleClass="locale-form">
                     <h:selectOneMenu value="#{localeBean.language}" styleClass="locale-select">
                         <f:selectItem itemValue="ru" itemLabel="RU"/>
                         <f:selectItem itemValue="en" itemLabel="EN"/>
-                        <f:ajax event="change" listener="#{localeBean.applyLocale}" render="@all"/>
+                        <!-- Specific render list pointing directly to individual text components and forms -->
+                        <f:ajax event="change" 
+                                listener="#{localeBean.applyLocale}" 
+                                render=":app-messages :headerTitle :backLink :coordsForm:labelR :coordsForm:labelX :coordsForm:xInput :coordsForm:labelY :historyTitle :clearForm:clearBtn :history-table-panel"/>
                     </h:selectOneMenu>
                 </h:form>
-                <h:link outcome="index" value="#{msg['page.main.back']}" styleClass="btn-link" />
+                <!-- Added explicit ID to the back link component -->
+                <h:link id="backLink" outcome="index" value="#{msg['page.main.back']}" styleClass="btn-link" />
             </div>
         </header>
 
@@ -42,7 +50,7 @@
 
                         <!-- Выбор R -->
                         <div class="form-group" id="rGroup">
-                            <label>#{msg['label.r']}</label>
+                            <label><h:outputText id="labelR" value="#{msg['label.r']}" /></label>
                             <div class="r-option">
                                 <h:selectBooleanCheckbox id="r1" value="#{pointCheckBean.zero}" />
                                 <label for="r1">1</label>
@@ -67,7 +75,8 @@
 
                         <!-- Ввод X -->
                         <div class="form-group" id="xGroup">
-                            <label for="xInput">#{msg['label.x']}</label>
+                            <label for="xInput"><h:outputText id="labelX" value="#{msg['label.x']}" /></label>
+                            <!-- Input element must be rendered directly to dynamically evaluate its localized placeholder attribute -->
                             <h:inputText id="xInput" value="#{pointCheckBean.selectedX}" required="true">
                                 <f:passThroughAttribute name="placeholder" value="#{msg['label.x.placeholder']}" />
                             </h:inputText>
@@ -75,7 +84,7 @@
 
                         <!-- Кнопки Y -->
                         <div class="form-group">
-                            <label>#{msg['label.y']}</label>
+                            <label><h:outputText id="labelY" value="#{msg['label.y']}" /></label>
                             <div class="y-buttons">
                                 <h:commandButton value="-3" action="#{pointCheckBean.submitForm(-3)}" styleClass="btn">
                                     <f:ajax execute="@form" render=":jsf-errors-container :history-table-panel" />
@@ -90,7 +99,7 @@
                                     <f:ajax execute="@form" render=":jsf-errors-container :history-table-panel" />
                                 </h:commandButton>
                                 <h:commandButton value="1" action="#{pointCheckBean.submitForm(1)}" styleClass="btn">
-                                    <f:ajax execute="@form" render=":jsf-errors-container :history-table-panel" />
+                                    <f:ajax execute="@form" render=":jsf-errors-container :history-table-container :history-table-panel" />
                                 </h:commandButton>
                                 <h:commandButton value="2" action="#{pointCheckBean.submitForm(2)}" styleClass="btn">
                                     <f:ajax execute="@form" render=":jsf-errors-container :history-table-panel" />
@@ -107,17 +116,14 @@
                             </div>
                         </div>
 
-                        <!-- Сообщения об ошибках JSF -->
                         <div class="jsf-errors-container" id="jsf-errors-container">
                             <h:messages id="msgs" layout="table" styleClass="jsf-error-message" />
                         </div>
 
-                        <!-- Скрытые поля для клика по графику -->
                         <h:inputHidden id="graphX" value="#{pointCheckBean.graphX}" />
                         <h:inputHidden id="graphY" value="#{pointCheckBean.graphY}" />
                         <h:inputHidden id="graphR" value="#{pointCheckBean.graphR}" />
                         <h:commandButton id="graphSubmit" action="#{pointCheckBean.submitFromGraph()}" style="display: none;">
-                            <!-- Execute only hidden graph inputs to avoid validating other fields like X when submitting from canvas -->
                             <f:ajax execute="graphX graphY graphR" render=":jsf-errors-container :history-table-panel" />
                         </h:commandButton>
 
@@ -131,15 +137,16 @@
 
             <section class="history">
                 <div class="history-header">
-                    <h2>#{msg['history.title']}</h2>
-                    <h:form>
-                        <h:commandButton value="#{msg['history.clear']}" action="#{historyBean.clearAll()}"
+                    <h2><h:outputText id="historyTitle" value="#{msg['history.title']}" /></h2>
+                    <h:form id="clearForm">
+                        <h:commandButton id="clearBtn" value="#{msg['history.clear']}" action="#{historyBean.clearAll()}"
                                          styleClass="btn" data-action="clear-history">
                             <f:ajax execute="@this" render=":history-table-panel" />
                         </h:commandButton>
                     </h:form>
                 </div>
 
+                <!-- Note: The history loop and fallback rows must remain inside an updatable structural panel -->
                 <h:panelGroup id="history-table-panel">
                     <div class="history-table-wrapper" id="history-table-wrapper">
                         <table id="history-table">
@@ -161,25 +168,19 @@
                                         <td>#{entry.point().x()}</td>
                                         <td>#{entry.point().y()}</td>
                                         <td>#{entry.point().r()}</td>
-                                            <td>#{entry.execTime()}</td>
+                                        <td>#{entry.execTime()}</td>
                                     </tr>
                                 </ui:repeat>
-                                <!-- Статическая строка по умолчанию, чтобы пользователь видел "История пуста" сразу при загрузке.
-                                     JS код удалит эту строку, как только появятся реальные записи с классом .history-item -->
                                 <tr class="history-empty">
                                     <td colspan="6" style="text-align: center; padding: 2rem;">#{msg['history.empty']}</td>
                                 </tr>
-                                <ui:fragment rendered="#{empty historyBean.entries}">
-                                    <!-- Серверный fallback — оставлен для совместимости -->
-                                </ui:fragment>
                             </tbody>
                         </table>
                     </div>
                 </h:panelGroup>
             </section>
         </main>
-    <!-- Fallback script in case JSF didn't render body script correctly -->
-    <script type="text/javascript" src="#{request.contextPath}/resources/js/app.js"></script>
+        <script type="text/javascript" src="#{request.contextPath}/resources/js/app.js"></script>
     </h:body>
 </f:view>
 </html>
