@@ -8,7 +8,7 @@ fse.svn.sandbox.dir = sandbox
 fse.svn.sandbox.remote = remote
 fse.svn.sandbox.local = local
 
-fse.compile.source = src
+fse.compile.source = src/main/java
 fse.compile.target = build
 
 fse.i18n.native.dir = src/main/i18n-native
@@ -56,7 +56,7 @@ fse.env.docker.tag = pr-2
 
 fse.test.source = src/test/java
 fse.test.target = build-test
-fse.test.reports.dir = ${fse.test.target}/reports
+fse.test.reports.subdir = reports
 
 fse.xml.includes = **/*.xml,**/*.xhtml
 fse.xml.excludes = build-test/**,build/**,target/**,alt-version/**,.ant/**,sandbox/**

@@ -13,14 +13,14 @@
     </fileset>
   </path>
 
-    <path id="fse.ivy.path.test">
-        <fileset dir="${fse.ant.home}/compile">
-            <include name="*.jar"/>
-        </fileset>
-        <fileset dir="${fse.ant.home}/test">
-            <include name="*.jar"/>
-        </fileset>
-    </path>
+  <path id="fse.ivy.path.test">
+    <fileset dir="${fse.ant.home}/compile">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${fse.ant.home}/test">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
 
   <taskdef resource="net/sf/antcontrib/antlib.xml">
     <classpath refid="fse.ivy.path.ant"/>
@@ -391,10 +391,9 @@
         <echo message="Compiling JUnit tests..."/>
 
         <delete dir="${fse.test.target}" />
-        <delete dir="${fse.test.reports.dir}" />
 
         <mkdir dir="${fse.test.target}"/>
-        <mkdir dir="${fse.test.reports.dir}"/>
+        <mkdir dir="${fse.test.target}/${fse.test.reports.dir}"/>
 
         <javac srcdir="${fse.test.source}"
                destdir="${fse.test.target}"
@@ -402,7 +401,7 @@
                target="${fse.compile.jvm.target}"
                includeantruntime="false">
             <classpath>
-                <path refid="fse.ivy.path.compile"/>
+                <path refid="fse.ivy.path.test"/>
                 <pathelement location="${fse.compile.target}"/>
             </classpath>
         </javac>
@@ -427,7 +426,7 @@
             <arg value="execute"/>
             <arg value="--scan-classpath"/>
             <arg value="--details=verbose"/>
-            <arg value="--reports-dir=${fse.test.reports.dir}"/>
+            <arg value="--reports-dir=${fse.test.target}/${fse.test.reports.subdir}"/>
         </java>
 
         <echo message="Done task 'test'!" />
@@ -501,17 +500,30 @@
     <target name="report" depends="test">
         <echo message="Saving test reports to SVN..."/>
 
-        <!-- Добавляем отчеты в SVN -->
         <java classname="org.tmatesoft.svn.cli.SVN"
-              failonerror="false"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+          <arg value="update"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="add"/>
+            <arg value="--depth"/>
+            <arg value="empty"/>
+            <arg value="--force"/>
+            <arg value="${fse.test.target}"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
               classpathref="fse.ivy.path.ant"
               fork="true">
             <arg value="add"/>
             <arg value="--force"/>
-            <arg value="${fse.test.reports.dir}"/>
+            <arg value="${fse.test.target}/${fse.test.reports.subdir}"/>
         </java>
 
-        <!-- Коммитим отчеты -->
         <java classname="org.tmatesoft.svn.cli.SVN"
               failonerror="true"
               classpathref="fse.ivy.path.ant"
@@ -519,7 +531,6 @@
             <arg value="commit"/>
             <arg value="-m"/>
             <arg value="feat: add test reports (Ant-automated)"/>
-            <arg value="${fse.test.reports.dir}"/>
         </java>
 
         <echo message="Done task 'report'!" />
