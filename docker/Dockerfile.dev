@@ -4,6 +4,15 @@
 # Purpose: Execution and automation of Ant build scripts and SVN integration
 # =============================================================================
 
+FROM eclipse-temurin:21-jdk AS jbuilder
+RUN jlink \
+    --add-modules java.base,jdk.javadoc,jdk.compiler,java.sql,java.naming \
+    --strip-debug \
+    --no-man-pages \
+    --no-header-files \
+    --compress=2 \
+    --output /javadoc-minimal
+
 FROM python:3.11-slim
 
 RUN apt-get update && \
@@ -56,3 +65,7 @@ RUN apt-get update && apt-get install -y \
     docker-compose-plugin && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Javadoc Integration
+COPY --from=jbuilder /javadoc-minimal /opt/javadoc-minimal
+RUN ln -s /opt/javadoc-minimal/bin/javadoc /usr/local/bin/javadoc
