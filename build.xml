@@ -391,9 +391,7 @@
         <echo message="Compiling JUnit tests..."/>
 
         <delete dir="${fse.test.target}" />
-
         <mkdir dir="${fse.test.target}"/>
-        <mkdir dir="${fse.test.target}/${fse.test.reports.dir}"/>
 
         <javac srcdir="${fse.test.source}"
                destdir="${fse.test.target}"
@@ -414,6 +412,10 @@
 
         <antcall target="compile-tests" />
 
+        <condition property="junit.reports.arg" value="--reports-dir=${fse.test.target}/${fse.test.reports.subdir}" else="">
+            <isset property="fse.test.report.output"/> 
+        </condition>
+
         <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
             <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
             <jvmarg value="-Xshare:off"/>
@@ -426,7 +428,7 @@
             <arg value="execute"/>
             <arg value="--scan-classpath"/>
             <arg value="--details=verbose"/>
-            <arg value="--reports-dir=${fse.test.target}/${fse.test.reports.subdir}"/>
+            <arg line="${junit.reports.arg}"/>
         </java>
 
         <echo message="Done task 'test'!" />
@@ -497,7 +499,11 @@
         <echo message="Done task 'doc'!" />
     </target>
 
-    <target name="report" depends="test">
+    <target name="report">
+        <antcall target="test">
+          <param name="fse.test.report.output" value="true" />
+        </antcall>
+
         <echo message="Saving test reports to SVN..."/>
 
         <java classname="org.tmatesoft.svn.cli.SVN"
