@@ -43,7 +43,7 @@
     <echo message="Done task 'native2ascii'!" />
   </target>
 
-  <target name="compile" depends="native2ascii">
+  <target name="compile">
     <echo message="Compiling the project from ${fse.compile.source}..."/>
 
     <echo message="Source Java: ${fse.compile.jvm.source}"/>
@@ -53,7 +53,7 @@
     <mkdir dir="${fse.compile.target}" />
 
     <copy todir="${fse.compile.target}">
-      <fileset dir="${fse.i18n.target.dir}"/>
+      <fileset dir="${fse.i18n.native.dir}"/>
     </copy>
 
     <javac srcdir="${fse.compile.source}"
@@ -393,11 +393,21 @@
         </javac>
 
         <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <!-- If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning -->
+            <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
+            <!-- Sharing is only supported for boot loader classes because bootstrap classpath has been appended -->
+            <jvmarg value="-Xshare:off"/>
             <classpath>
                 <path refid="fse.ivy.path.compile"/>
                 <pathelement location="${fse.compile.target}"/>
                 <pathelement location="${fse.test.target}"/>
             </classpath>
+            <!--
+            This behaviour has been deprecated and will be removed in a future release.
+            Please use the 'execute' command directly.
+            -->
+            <arg value="execute"/>
+            
             <arg value="--scan-classpath"/>
             <arg value="--details=verbose"/>
             <arg value="--reports-dir=${fse.test.reports.dir}"/>

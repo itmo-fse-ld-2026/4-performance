@@ -1,7 +1,9 @@
 package weblab.dao;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,25 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Тесты работы с БД")
 public class ResultDAOTest {
+    
+    private static MockedStatic<weblab.i18n.Messages> messagesMock;
+
+    @BeforeAll
+    static void setupSuite() {
+        System.setProperty("java.naming.factory.initial", DummyContextFactory.class.getName());
+        
+        messagesMock = mockStatic(weblab.i18n.Messages.class);
+        messagesMock.when(() -> weblab.i18n.Messages.get(org.mockito.ArgumentMatchers.anyString()))
+                    .thenReturn("dummy_db_resource");
+    }
+
+    @AfterAll
+    static void tearDownSuite() {
+        if (messagesMock != null) {
+            messagesMock.close();
+        }
+    }
+
     @Mock
     private Connection mockConnection;
 
@@ -44,7 +65,9 @@ public class ResultDAOTest {
 
     @AfterEach
     void tearDown() {
-        dbUtilMock.close();
+        if (dbUtilMock != null) {
+            dbUtilMock.close();
+        }
     }
 
     private void setupMockStatement(String sql) throws SQLException {
@@ -225,5 +248,28 @@ public class ResultDAOTest {
         resultDAO.clearResults();
 
         verify(mockPreparedStatement).executeUpdate();
+    }
+
+    public static class DummyContextFactory implements javax.naming.spi.InitialContextFactory {
+        @Override
+        public javax.naming.Context getInitialContext(java.util.Hashtable<?, ?> environment) throws javax.naming.NamingException {
+            javax.naming.Context mockContext = mock(javax.naming.Context.class);
+            try {
+                javax.sql.DataSource mockDS = mock(javax.sql.DataSource.class);
+                java.sql.Connection mockConn = mock(java.sql.Connection.class);
+                java.sql.Statement mockStmt = mock(java.sql.Statement.class);
+                java.sql.PreparedStatement mockPrepStmt = mock(java.sql.PreparedStatement.class);
+                java.sql.ResultSet mockRS = mock(java.sql.ResultSet.class);
+
+                org.mockito.Mockito.lenient().when(mockConn.createStatement()).thenReturn(mockStmt);
+                org.mockito.Mockito.lenient().when(mockConn.prepareStatement(org.mockito.ArgumentMatchers.anyString())).thenReturn(mockPrepStmt);
+                org.mockito.Mockito.lenient().when(mockStmt.executeQuery(org.mockito.ArgumentMatchers.anyString())).thenReturn(mockRS);
+                org.mockito.Mockito.lenient().when(mockDS.getConnection()).thenReturn(mockConn);
+                
+                org.mockito.Mockito.lenient().when(mockContext.lookup(org.mockito.ArgumentMatchers.anyString())).thenReturn(mockDS);
+            } catch (Exception ignored) {
+            }
+            return mockContext;
+        }
     }
 }
