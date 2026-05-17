@@ -13,6 +13,15 @@
     </fileset>
   </path>
 
+    <path id="fse.ivy.path.test">
+        <fileset dir="${fse.ant.home}/compile">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${fse.ant.home}/test">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
   <taskdef resource="net/sf/antcontrib/antlib.xml">
     <classpath refid="fse.ivy.path.ant"/>
   </taskdef>
@@ -26,6 +35,9 @@
     <ivy:retrieve
         conf="compile"
         pattern="${fse.ant.home}/compile/[artifact]-[revision](-[classifier]).[ext]" />
+    <ivy:retrieve
+        conf="test"
+        pattern="${fse.ant.home}/test/[artifact]-[revision](-[classifier]).[ext]" />
   </target>
 
   <target name="native2ascii">
@@ -408,6 +420,7 @@
             <jvmarg value="-Xshare:off"/>
             <classpath>
                 <path refid="fse.ivy.path.compile"/>
+                <path refid="fse.ivy.path.test"/>
                 <pathelement location="${fse.compile.target}"/>
                 <pathelement location="${fse.test.target}"/>
             </classpath>
