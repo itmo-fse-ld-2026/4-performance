@@ -375,8 +375,11 @@
     </exec>
   </target>
 
-    <target name="test" depends="build">
-        <echo message="Running JUnit tests..."/>
+    <target name="compile-tests">
+        <echo message="Compiling JUnit tests..."/>
+
+        <delete dir="${fse.test.target}" />
+        <delete dir="${fse.test.reports.dir}" />
 
         <mkdir dir="${fse.test.target}"/>
         <mkdir dir="${fse.test.reports.dir}"/>
@@ -392,22 +395,23 @@
             </classpath>
         </javac>
 
+        <echo message="Done task 'compile-tests'!" />
+    </target>
+
+    <target name="test" depends="build">
+        <echo message="Running JUnit tests..."/>
+
+        <antcall target="compile-tests" />
+
         <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
-            <!-- If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning -->
             <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
-            <!-- Sharing is only supported for boot loader classes because bootstrap classpath has been appended -->
             <jvmarg value="-Xshare:off"/>
             <classpath>
                 <path refid="fse.ivy.path.compile"/>
                 <pathelement location="${fse.compile.target}"/>
                 <pathelement location="${fse.test.target}"/>
             </classpath>
-            <!--
-            This behaviour has been deprecated and will be removed in a future release.
-            Please use the 'execute' command directly.
-            -->
             <arg value="execute"/>
-            
             <arg value="--scan-classpath"/>
             <arg value="--details=verbose"/>
             <arg value="--reports-dir=${fse.test.reports.dir}"/>
