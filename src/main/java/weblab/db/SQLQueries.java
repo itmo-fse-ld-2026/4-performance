@@ -4,7 +4,7 @@ package weblab.db;
  * Класс, содержащий SQL-запросы для работы с таблицей результатов.
  *
  * <p>Все запросы хранятся в виде текстовых блоков (Java 15+ text blocks)
- * для удобочитаемости и лёгкости поддержки.</p>
+ * для удобочитаемости и лёгкости поддержки.
  *
  * <p>Таблица {@code results} предназначена для хранения истории проверок точек
  * и имеет следующую структуру:
@@ -18,7 +18,7 @@ package weblab.db;
  *   <li>{@code timestamp} - время проверки</li>
  *   <li>{@code exec_time} - время выполнения проверки в миллисекундах</li>
  * </ul>
- * </p>
+ *
  *
  * @author Vladislav Dyadev
  * @version 1.0
@@ -29,7 +29,7 @@ public class SQLQueries {
      * SQL-запрос для создания таблицы результатов.
      *
      * <p>Использует {@code IF NOT EXISTS} для безопасного повторного вызова.
-     * Тип {@code SERIAL} автоматически генерирует уникальные идентификаторы.</p>
+     * Тип {@code SERIAL} автоматически генерирует уникальные идентификаторы.
      */
     public static final String CREATE_TABLE_RESULTS = """
         CREATE TABLE IF NOT EXISTS results (
@@ -58,7 +58,7 @@ public class SQLQueries {
      *   <li>timestamp - время проверки</li>
      *   <li>exec_time - время выполнения</li>
      * </ol>
-     * </p>
+     *
      */
     public static final String INSERT_RESULT = """
         INSERT INTO results (x, y, r, hit, session_id, timestamp, exec_time) 
@@ -69,7 +69,7 @@ public class SQLQueries {
      * SQL-запрос для получения всех записей результатов.
      *
      * <p>Результаты сортируются по времени создания в порядке убывания
-     * (самые новые записи первыми).</p>
+     * (самые новые записи первыми).
      */
     public static final String SELECT_ALL_RESULTS = """
         SELECT x, y, r, hit, session_id, timestamp, exec_time 
@@ -81,7 +81,7 @@ public class SQLQueries {
      * SQL-запрос для получения записей результатов по идентификатору сессии.
      *
      * <p>Использует параметр {@code session_id} для фильтрации.
-     * Результаты сортируются по времени создания в порядке убывания.</p>
+     * Результаты сортируются по времени создания в порядке убывания.
      */
     public static final String SELECT_RESULTS_BY_SESSION = """
         SELECT x, y, r, hit, session_id, timestamp, exec_time 
@@ -93,7 +93,7 @@ public class SQLQueries {
     /**
      * SQL-запрос для полной очистки таблицы результатов.
      *
-     * <p>Удаляет все записи без возможности восстановления.</p>
+     * <p>Удаляет все записи без возможности восстановления.
      */
     public static final String DELETE_ALL_RESULTS = """
         DELETE FROM results;
@@ -102,7 +102,7 @@ public class SQLQueries {
     /**
      * SQL-запрос для удаления результатов по идентификатору сессии.
      *
-     * <p>Удаляет все записи, связанные с указанной сессией.</p>
+     * <p>Удаляет все записи, связанные с указанной сессией.
      */
     public static final String DELETE_RESULTS_BY_SESSION = """
         DELETE FROM results WHERE session_id = ?;

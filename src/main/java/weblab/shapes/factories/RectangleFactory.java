@@ -8,7 +8,7 @@ import weblab.shapes.templates.Shape;
  *
  * <p>Прямоугольник создаётся с шириной = {@code widthRatio * R}
  * и высотой = {@code heightRatio * R}. Это позволяет использовать
- * один и тот же тип фигуры с разными пропорциями.</p>
+ * один и тот же тип фигуры с разными пропорциями.
  *
  * <p>Примеры использования:
  * <ul>
@@ -16,7 +16,7 @@ import weblab.shapes.templates.Shape;
  *   <li>Прямоугольник 2R×R: new RectangleFactory(2.0, 1.0)</li>
  *   <li>Прямоугольник R×2R: new RectangleFactory(1.0, 2.0)</li>
  * </ul>
- * </p>
+ *
  *
  * @author Vladislav Dyadev
  * @version 1.0

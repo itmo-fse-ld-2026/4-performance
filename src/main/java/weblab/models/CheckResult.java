@@ -4,10 +4,10 @@ package weblab.models;
  * Результат проверки одной точки на попадание в область.
  *
  * <p>Этот record объединяет проверяемую точку и результат проверки.
- * Используется как возвращаемое значение сервисом {@link weblab.services.AreaCheckService}.</p>
+ * Используется как возвращаемое значение сервисом {@link weblab.services.AreaCheckService}.
  *
  * <p>Record обеспечивает неизменяемость данных и автоматически генерирует
- * конструктор, геттеры, {@code equals()}, {@code hashCode()} и {@code toString()}.</p>
+ * конструктор, геттеры, {@code equals()}, {@code hashCode()} и {@code toString()}.
  *
  * @param point проверяемая точка (не может быть {@code null})
  * @param hit   результат проверки: {@code true} - точка попала в область,

@@ -8,7 +8,7 @@ import weblab.shapes.templates.Triangle;
  *
  * <p>Треугольник создаётся с основанием = {@code baseRatio * R}
  * и высотой = {@code heightRatio * R}. Это позволяет использовать
- * один и тот же тип фигуры с разными пропорциями.</p>
+ * один и тот же тип фигуры с разными пропорциями.
  *
  * <p>Примеры использования:
  * <ul>
@@ -16,7 +16,7 @@ import weblab.shapes.templates.Triangle;
  *   <li>Треугольник 2:1 (основание в 2 раза больше высоты): new TriangleFactory(2.0, 1.0)</li>
  *   <li>Треугольник 1:2 (высота в 2 раза больше основания): new TriangleFactory(1.0, 2.0)</li>
  * </ul>
- * </p>
+ *
  *
  * @author Vladislav Dyadev
  * @version 1.0
