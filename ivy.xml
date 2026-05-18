@@ -4,6 +4,7 @@
   <configurations>
     <conf name="compile" description="Dependencies for javac"/>
     <conf name="ant" description="Dependencies for Ant tasks"/>
+    <conf name="test" description="Dependencies for tests"/>
   </configurations>
 
   <dependencies>
@@ -17,6 +18,11 @@
     </dependency>
     <!-- for scp goal -->
     <dependency org="com.github.mwiede" name="jsch" rev="2.28.2" conf="ant->default" />
+    <!-- for test goals -->
+    <dependency org="org.junit.jupiter" name="junit-jupiter" rev="5.10.2" conf="test->default" />
+    <dependency org="org.junit.platform" name="junit-platform-console" rev="1.10.2" conf="test->default" />
+    <dependency org="org.mockito" name="mockito-core" rev="5.11.0" conf="test->default" />
+    <dependency org="org.mockito" name="mockito-junit-jupiter" rev="5.11.0" conf="test->default" />
 
     <!-- project dependencies -->
     <dependency org="jakarta.faces" name="jakarta.faces-api" rev="4.0.1" conf="compile->default" />

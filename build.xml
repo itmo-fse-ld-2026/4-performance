@@ -13,6 +13,15 @@
     </fileset>
   </path>
 
+  <path id="fse.ivy.path.test">
+    <fileset dir="${fse.ant.home}/compile">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${fse.ant.home}/test">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
   <taskdef resource="net/sf/antcontrib/antlib.xml">
     <classpath refid="fse.ivy.path.ant"/>
   </taskdef>
@@ -26,6 +35,24 @@
     <ivy:retrieve
         conf="compile"
         pattern="${fse.ant.home}/compile/[artifact]-[revision](-[classifier]).[ext]" />
+    <ivy:retrieve
+        conf="test"
+        pattern="${fse.ant.home}/test/[artifact]-[revision](-[classifier]).[ext]" />
+  </target>
+
+  <target name="native2ascii">
+    <echo message="Converting localization files from ${fse.i18n.native.dir} to ${fse.i18n.target.dir}..."/>
+
+    <delete dir="${fse.i18n.target.dir}" />
+    <mkdir dir="${fse.i18n.target.dir}" />
+
+    <native2ascii encoding="${fse.i18n.encoding}"
+                  src="${fse.i18n.native.dir}"
+                  dest="${fse.i18n.target.dir}"
+                  includes="${fse.i18n.includes}"
+                  ext="${fse.i18n.ext}"/>
+
+    <echo message="Done task 'native2ascii'!" />
   </target>
 
   <target name="compile">
@@ -36,6 +63,10 @@
 
     <delete dir="${fse.compile.target}" />
     <mkdir dir="${fse.compile.target}" />
+
+    <copy todir="${fse.compile.target}">
+      <fileset dir="${fse.i18n.native.dir}"/>
+    </copy>
 
     <javac srcdir="${fse.compile.source}"
            destdir="${fse.compile.target}"
@@ -98,6 +129,9 @@
     <delete dir="${fse.compile.target}"/>
     <delete dir="${fse.build.target}"/>
     <delete dir="${fse.alt.dir}"/>
+    <delete dir="${fse.i18n.target.dir}"/>
+    <delete dir="${fse.test.target}"/>
+    <delete dir="${fse.doc.dir}/.."/>
   </target>
 
   <target name="music">
@@ -110,6 +144,13 @@
 
   <target name="diff">
     <echo message="Checking for changes in target classes..." />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="update"/>
+    </java>
+
     <java classname="org.tmatesoft.svn.cli.SVN"
           outputproperty="fse.diff.out"
           classpathref="fse.ivy.path.ant"
@@ -233,10 +274,12 @@
       <arg value="PREV"/>
     </java>
 
-    <antcall target="-history-recursion-start" inheritAll="false" />
+    <antcall target="-history-recursion-start">
+      <param name="fse.history.hasErrors" value="true"/>
+    </antcall>
   </target>
 
-  <target name="-history-create-log" if="${fse.history.hasErrors}" >
+  <target name="-history-create-log" if="fse.history.hasErrors" >
     <echo message="Found working version! Logging breaking changes..." />
 
     <loadfile property="fse.broken.rev" srcFile="${java.io.tmpdir}/${fse.history.broken_rev}"/>
@@ -267,7 +310,7 @@
     <echo message="Creating alternative version of project..." />
 
     <copy todir="${fse.alt.dir}">
-      <fileset dir="src"/>
+      <fileset dir="${fse.compile.source}"/>
     </copy>
 
     <for list="${fse.alt.pairs}" param="pair" delimiter=",">
@@ -346,4 +389,162 @@
       <arg value="run"/>
     </exec>
   </target>
+
+    <target name="compile-tests">
+        <echo message="Compiling JUnit tests..."/>
+
+        <delete dir="${fse.test.target}" />
+        <mkdir dir="${fse.test.target}"/>
+
+        <javac srcdir="${fse.test.source}"
+               destdir="${fse.test.target}"
+               source="${fse.compile.jvm.source}"
+               target="${fse.compile.jvm.target}"
+               includeantruntime="false">
+            <classpath>
+                <path refid="fse.ivy.path.test"/>
+                <pathelement location="${fse.compile.target}"/>
+            </classpath>
+        </javac>
+
+        <echo message="Done task 'compile-tests'!" />
+    </target>
+
+    <target name="test" depends="build">
+        <echo message="Running JUnit tests..."/>
+
+        <antcall target="compile-tests" />
+
+        <condition property="junit.reports.arg" value="--reports-dir=${fse.test.target}/${fse.test.reports.subdir}" else="">
+            <isset property="fse.test.report.output"/> 
+        </condition>
+
+        <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
+            <jvmarg value="-Xshare:off"/>
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+                <path refid="fse.ivy.path.test"/>
+                <pathelement location="${fse.compile.target}"/>
+                <pathelement location="${fse.test.target}"/>
+            </classpath>
+            <arg value="execute"/>
+            <arg value="--scan-classpath"/>
+            <arg value="--details=verbose"/>
+            <arg line="${junit.reports.arg}"/>
+        </java>
+
+        <echo message="Done task 'test'!" />
+    </target>
+
+    <target name="xml">
+        <echo message="Validating XML and XHTML files in the project..."/>
+
+        <xmlvalidate lenient="true" failonerror="false">
+            <fileset dir="."
+                     includes="${fse.xml.includes}"
+                     excludes="${fse.xml.excludes}"/>
+        </xmlvalidate>
+
+        <echo message="Done task 'xml'!" />
+    </target>
+
+    <target name="doc" depends="build">
+        <echo message="Generating JavaDoc documentation..."/>
+
+        <mkdir dir="${fse.doc.dir}"/>
+        <javadoc sourcepath="${fse.compile.source}"
+                 destdir="${fse.doc.dir}"
+                 source="${fse.compile.jvm.source}"
+                 windowtitle="${fse.doc.windowtitle}"
+                 header="${fse.doc.header}"
+                 encoding="${fse.doc.encoding}"
+                 charset="${fse.doc.encoding}"
+                 docencoding="${fse.doc.encoding}"
+                 failonerror="false"
+                 access="private">
+            <packageset dir="${fse.compile.source}" defaultexcludes="yes">
+                <include name="weblab/**"/>
+            </packageset>
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+            </classpath>
+        </javadoc>
+
+        <copy todir="${fse.build.target}/docs/javadoc">
+            <fileset dir="${fse.doc.dir}"/>
+        </copy>
+
+        <checksum algorithm="MD5" totalproperty="project.md5.hash" todir="${fse.build.target}">
+            <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
+        </checksum>
+
+        <checksum algorithm="SHA-1" totalproperty="project.sha1.hash" todir="${fse.build.target}">
+            <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
+        </checksum>
+
+        <copy todir="${fse.build.target}/docs/javadoc">
+            <fileset dir="${fse.doc.dir}"/>
+        </copy>
+
+        <tstamp/>
+
+        <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
+            update="true"
+            basedir="${fse.build.target}"
+            includes="docs/**">
+            <manifest>
+                <attribute name="Documentation" value="JavaDoc included in docs/javadoc"/>
+                <attribute name="Doc-Generated" value="${TODAY}"/>
+                <attribute name="Doc-Encoding" value="${fse.doc.encoding}"/>
+                <attribute name="Project-MD5-Checksum" value="${project.md5.hash}"/>
+                <attribute name="Project-SHA1-Checksum" value="${project.sha1.hash}"/>
+            </manifest>
+        </jar>
+
+        <echo message="Done task 'doc'!" />
+    </target>
+
+    <target name="report">
+        <antcall target="test">
+          <param name="fse.test.report.output" value="true" />
+        </antcall>
+
+        <echo message="Saving test reports to SVN..."/>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+          <arg value="update"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="add"/>
+            <arg value="--depth"/>
+            <arg value="empty"/>
+            <arg value="--force"/>
+            <arg value="${fse.test.target}"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="add"/>
+            <arg value="--force"/>
+            <arg value="${fse.test.target}/${fse.test.reports.subdir}"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              failonerror="true"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="commit"/>
+            <arg value="-m"/>
+            <arg value="feat: add test reports (Ant-automated)"/>
+        </java>
+
+        <echo message="Done task 'report'!" />
+    </target>
 </project>

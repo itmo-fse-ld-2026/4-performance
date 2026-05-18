@@ -8,8 +8,14 @@ fse.svn.sandbox.dir = sandbox
 fse.svn.sandbox.remote = remote
 fse.svn.sandbox.local = local
 
-fse.compile.source = src
+fse.compile.source = src/main/java
 fse.compile.target = build
+
+fse.i18n.native.dir = src/main/i18n-native
+fse.i18n.target.dir = build-i18n
+fse.i18n.includes = weblab/messages*.properties
+fse.i18n.encoding = UTF-8
+fse.i18n.ext = .properties
 fse.compile.jvm.source = 17
 fse.compile.jvm.target = 17
 
@@ -48,3 +54,18 @@ fse.env.postgres.port = 12345
 fse.env.postgres.user = postgres
 fse.env.postgres.password = 12345
 fse.env.docker.tag = pr-2
+
+fse.test.source = src/test/java
+fse.test.target = build-test
+fse.test.reports.subdir = reports
+
+fse.xml.includes = **/*.xml,**/*.xhtml
+fse.xml.excludes = build-test/**,build/**,target/**,alt-version/**,.ant/**,sandbox/**
+fse.xml.root.includes = *.xml
+
+fse.doc.dir = docs/javadoc
+fse.doc.windowtitle = ${fse.build.title} API Documentation
+fse.doc.header = ${fse.build.title}
+fse.doc.footer = ${fse.build.vendor}
+fse.doc.encoding = UTF-8
+fse.doc.keys = **/*.md5, **/*.sha1

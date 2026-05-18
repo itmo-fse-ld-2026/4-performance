@@ -7,6 +7,11 @@
 
     <display-name>Web3 JSF App</display-name>
 
+    <context-param>
+        <param-name>jakarta.faces.ENCODING</param-name>
+        <param-value>UTF-8</param-value>
+    </context-param>
+
     <!-- Сессии -->
     <session-config>
         <session-timeout>30</session-timeout>

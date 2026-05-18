@@ -30,6 +30,7 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
+build-i18n/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -58,3 +59,7 @@ postgresql_db_data/
 sandbox/
 .ant
 build.properties
+build-test/
+docs/
+*.md5
+*.sha1
