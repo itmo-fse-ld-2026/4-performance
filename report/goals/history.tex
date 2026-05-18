@@ -75,10 +75,12 @@
     <arg value="PREV"/>
   </java>
 
-  <antcall target="-history-recursion-start" inheritAll="false" />
+  <antcall target="-history-recursion-start">
+    <param name="fse.history.hasErrors" value="true"/>
+  </antcall>
 </target>
 
-<target name="-history-create-log" if="${fse.history.hasErrors}" >
+<target name="-history-create-log" if="fse.history.hasErrors" >
   <echo message="Found working version! Logging breaking changes..." />
 
   <loadfile property="fse.broken.rev" srcFile="${java.io.tmpdir}/${fse.history.broken_rev}"/>

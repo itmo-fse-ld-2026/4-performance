@@ -12,6 +12,10 @@
   <delete dir="${fse.compile.target}" />
   <mkdir dir="${fse.compile.target}" />
 
+  <copy todir="${fse.compile.target}">
+    <fileset dir="${fse.i18n.native.dir}"/>
+  </copy>
+
   <javac srcdir="${fse.compile.source}"
          destdir="${fse.compile.target}"
          source="${fse.compile.jvm.source}"

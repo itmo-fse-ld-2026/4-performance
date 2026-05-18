@@ -10,7 +10,7 @@
   <echo message="Creating alternative version of project..." />
 
   <copy todir="${fse.alt.dir}">
-    <fileset dir="src"/>
+    <fileset dir="${fse.compile.source}"/>
   </copy>
 
   <for list="${fse.alt.pairs}" param="pair" delimiter=",">
@@ -23,9 +23,9 @@
                      regexp="^(.+):"
                      select="\1" />
       <propertyregex property="to"
-                      input="@{pair}"
-                      regexp=":(.+)$"
-                      select="\1" />
+                     input="@{pair}"
+                     regexp=":(.+)$"
+                     select="\1" />
       <replaceregexp match="${from}" replace="${to}" flags="g" byline="true">
         <fileset dir="${fse.alt.dir}">
           <filename regex="${fse.alt.files}"/>

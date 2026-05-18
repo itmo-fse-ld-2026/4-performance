@@ -5,6 +5,13 @@
 \begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
 <target name="diff">
   <echo message="Checking for changes in target classes..." />
+
+  <java classname="org.tmatesoft.svn.cli.SVN"
+        classpathref="fse.ivy.path.ant"
+        fork="true">
+    <arg value="update"/>
+  </java>
+
   <java classname="org.tmatesoft.svn.cli.SVN"
         outputproperty="fse.diff.out"
         classpathref="fse.ivy.path.ant"
