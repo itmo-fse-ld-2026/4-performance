@@ -144,6 +144,13 @@
 
   <target name="diff">
     <echo message="Checking for changes in target classes..." />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="update"/>
+    </java>
+
     <java classname="org.tmatesoft.svn.cli.SVN"
           outputproperty="fse.diff.out"
           classpathref="fse.ivy.path.ant"
@@ -270,10 +277,12 @@
       <arg value="PREV"/>
     </java>
 
-    <antcall target="-history-recursion-start" inheritAll="false" />
+    <antcall target="-history-recursion-start">
+      <param name="fse.history.hasErrors" value="true"/>
+    </antcall>
   </target>
 
-  <target name="-history-create-log" if="${fse.history.hasErrors}" >
+  <target name="-history-create-log" if="fse.history.hasErrors" >
     <echo message="Found working version! Logging breaking changes..." />
 
     <loadfile property="fse.broken.rev" srcFile="${java.io.tmpdir}/${fse.history.broken_rev}"/>
@@ -304,7 +313,7 @@
     <echo message="Creating alternative version of project..." />
 
     <copy todir="${fse.alt.dir}">
-      <fileset dir="src"/>
+      <fileset dir="${fse.compile.source}"/>
     </copy>
 
     <for list="${fse.alt.pairs}" param="pair" delimiter=",">
@@ -469,11 +478,11 @@
             <fileset dir="${fse.doc.dir}"/>
         </copy>
 
-        <checksum algorithm="MD5" totalproperty="project.md5.hash">
+        <checksum algorithm="MD5" totalproperty="project.md5.hash" todir="${fse.build.target}">
             <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
         </checksum>
 
-        <checksum algorithm="SHA-1" totalproperty="project.sha1.hash">
+        <checksum algorithm="SHA-1" totalproperty="project.sha1.hash" todir="${fse.build.target}">
             <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
         </checksum>
 
