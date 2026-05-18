@@ -196,7 +196,7 @@
   </target>
 
   <target name="history">
-    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" failonerror="true"/>
+    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
 
     <java classname="org.tmatesoft.svn.cli.SVN"
           fork="true"
@@ -215,7 +215,7 @@
 
     <antcall target="-history-recursion-start" />
 
-    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" failonerror="true"/>
+    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
 
     <echo message="Done task 'history'!"/>
   </target>
@@ -246,12 +246,9 @@
       <arg value="revision"/>
     </java>
 
-    <echo file="${java.io.tmpdir}/${fse.history.broken_rev}"
-          message="${fse.history.headRev}" />
-
     <condition property="fse.history.isNotLast">
       <not>
-        <equals arg1="${fse.history.headRev}" arg2="2"/>
+        <equals arg1="${fse.history.headRev}" arg2="${fse.history.startRev}"/>
       </not>
     </condition>
 
