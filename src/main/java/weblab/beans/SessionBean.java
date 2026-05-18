@@ -25,6 +25,13 @@ import java.io.Serializable;
 @SessionScoped
 public class SessionBean implements Serializable {
     /**
+     * Конструктор по умолчанию.
+     */
+    public SessionBean() {
+        // Конструктор по умолчанию
+    }
+
+    /**
      * Возвращает уникальный идентификатор текущей HTTP-сессии.
      *
      * <p>Метод получает текущий JSF-контекст, извлекает из него

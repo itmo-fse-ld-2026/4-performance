@@ -22,6 +22,9 @@ import java.util.List;
  * @see AreaCheckService
  */
 public class HitChecker {
+    /**
+     * Список фигур, по которым будет проверяться точка.
+     */
     private final List<Shape> shapes;
 
     /**

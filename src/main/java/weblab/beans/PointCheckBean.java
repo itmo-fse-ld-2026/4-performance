@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
  *   <li>Четверть круга в квадранте 4 (радиус = R/2)</li>
  * </ul>
  *
- *
  * @author Vladislav Dyadev
  * @version 1.0
  * @see AreaCheckService
@@ -45,67 +44,261 @@ import java.util.stream.Collectors;
 @Named("pointCheckBean")
 @RequestScoped
 public class PointCheckBean {
+    /**
+     * Конструктор по умолчанию.
+     */
+    public PointCheckBean() {
+        // Конструктор по умолчанию
+    }
+
+    /**
+     * Бин для валидации координат точки.
+     */
     @Inject
     private PointValidationBean validationBean;
 
+    /**
+     * Бин для сохранения истории проверок.
+     */
     @Inject
     private HistoryBean historyBean;
 
+    /**
+     * Список точек для пакетной проверки.
+     */
     private List<Point> points = new ArrayList<>();
+
+    /**
+     * Флаг, указывающий, был ли клик по графику.
+     * {@code true} — точки получены из графика, {@code false} — из формы.
+     */
     private boolean graphClick = false;
 
+    /**
+     * Сервис проверки попадания точек в область.
+     * Содержит конфигурацию фигур по квадрантам.
+     */
     private final AreaCheckService areaCheckService = new AreaCheckService(List.of(
             new QuadrantShapeTemplate(new TriangleFactory(1.0, 0.5), 1),
             new QuadrantShapeTemplate(new RectangleFactory(1.0, 1.0), 2),
             new QuadrantShapeTemplate(new QuarterCircleFactory(0.5), 4)
     ));
 
+    /**
+     * Выбранное значение X из формы. Хранится как строка для возможности ввода дробных чисел.
+     */
     private String selectedX;
+
+    /**
+     * Выбранное значение Y из формы.
+     */
     private Double selectedY;
+
+    /**
+     * Массив выбранных значений R (checkboxes).
+     * Индексы соответствуют значениям: 0→1.0, 1→1.5, 2→2.0, 3→2.5, 4→3.0
+     */
     private boolean[] rValues = new boolean[5];
 
+    /**
+     * Координата X, полученная из графика при клике.
+     */
     private Double graphX;
+
+    /**
+     * Координата Y, полученная из графика при клике.
+     */
     private Double graphY;
+
+    /**
+     * Значение R, полученное из графика.
+     */
     private Double graphR;
 
+    // ==================== Getters and Setters ====================
+
+    /**
+     * Возвращает список точек для пакетной проверки.
+     *
+     * @return список точек
+     */
     public List<Point> getPoints() { return points; }
+
+    /**
+     * Устанавливает список точек для пакетной проверки.
+     *
+     * @param points список точек
+     */
     public void setPoints(List<Point> points) { this.points = points; }
 
+    /**
+     * Возвращает флаг, указывающий, был ли клик по графику.
+     *
+     * @return {@code true} если точки из графика, иначе {@code false}
+     */
     public boolean isGraphClick() { return graphClick; }
+
+    /**
+     * Устанавливает флаг клика по графику.
+     *
+     * @param graphClick {@code true} если точки из графика
+     */
     public void setGraphClick(boolean graphClick) { this.graphClick = graphClick; }
 
+    /**
+     * Возвращает выбранное значение X.
+     *
+     * @return значение X в виде строки
+     */
     public String getSelectedX() { return selectedX; }
+
+    /**
+     * Устанавливает выбранное значение X.
+     *
+     * @param selectedX значение X в виде строки
+     */
     public void setSelectedX(String selectedX) { this.selectedX = selectedX; }
 
+    /**
+     * Возвращает выбранное значение Y.
+     *
+     * @return значение Y
+     */
     public Double getSelectedY() { return selectedY; }
+
+    /**
+     * Устанавливает выбранное значение Y.
+     *
+     * @param selectedY значение Y
+     */
     public void setSelectedY(Double selectedY) { this.selectedY = selectedY; }
 
+    /**
+     * Возвращает массив выбранных значений R.
+     *
+     * @return массив boolean для каждого R
+     */
     public boolean[] getRValues() { return rValues; }
+
+    /**
+     * Устанавливает массив выбранных значений R.
+     *
+     * @param rValues массив boolean для каждого R
+     */
     public void setRValues(boolean[] rValues) { this.rValues = rValues; }
 
     // Именованные свойства для JSF
+
+    /**
+     * Возвращает выбран ли R=1.0.
+     *
+     * @return {@code true} если R=1.0 выбран, иначе {@code false}
+     */
     public boolean getZero() { return rValues[0]; }
+
+    /**
+     * Устанавливает выбор R=1.0.
+     *
+     * @param value {@code true} если R=1.0 выбран, иначе {@code false}
+     */
     public void setZero(boolean value) { rValues[0] = value; }
 
+    /**
+     * Возвращает выбран ли R=1.5.
+     *
+     * @return {@code true} если R=1.5 выбран, иначе {@code false}
+     */
     public boolean getOne() { return rValues[1]; }
+
+    /**
+     * Устанавливает выбор R=1.5.
+     *
+     * @param value {@code true} если R=1.5 выбран, иначе {@code false}
+     */
     public void setOne(boolean value) { rValues[1] = value; }
 
+    /**
+     * Возвращает выбран ли R=2.0.
+     *
+     * @return {@code true} если R=2.0 выбран, иначе {@code false}
+     */
     public boolean getTwo() { return rValues[2]; }
+
+    /**
+     * Устанавливает выбор R=2.0.
+     *
+     * @param value {@code true} если R=2.0 выбран, иначе {@code false}
+     */
     public void setTwo(boolean value) { rValues[2] = value; }
 
+    /**
+     * Возвращает выбран ли R=2.5.
+     *
+     * @return {@code true} если R=2.5 выбран, иначе {@code false}
+     */
     public boolean getThree() { return rValues[3]; }
+
+    /**
+     * Устанавливает выбор R=2.5.
+     *
+     * @param value {@code true} если R=2.5 выбран, иначе {@code false}
+     */
     public void setThree(boolean value) { rValues[3] = value; }
 
+    /**
+     * Возвращает выбран ли R=3.0.
+     *
+     * @return {@code true} если R=3.0 выбран, иначе {@code false}
+     */
     public boolean getFour() { return rValues[4]; }
+
+    /**
+     * Устанавливает выбор R=3.0.
+     *
+     * @param value {@code true} если R=3.0 выбран, иначе {@code false}
+     */
     public void setFour(boolean value) { rValues[4] = value; }
 
+    /**
+     * Возвращает координату X из графика.
+     *
+     * @return координата X
+     */
     public Double getGraphX() { return graphX; }
+
+    /**
+     * Устанавливает координату X из графика.
+     *
+     * @param graphX координата X
+     */
     public void setGraphX(Double graphX) { this.graphX = graphX; }
 
+    /**
+     * Возвращает координату Y из графика.
+     *
+     * @return координата Y
+     */
     public Double getGraphY() { return graphY; }
+
+    /**
+     * Устанавливает координату Y из графика.
+     *
+     * @param graphY координата Y
+     */
     public void setGraphY(Double graphY) { this.graphY = graphY; }
 
+    /**
+     * Возвращает значение R из графика.
+     *
+     * @return значение R
+     */
     public Double getGraphR() { return graphR; }
+
+    /**
+     * Устанавливает значение R из графика.
+     *
+     * @param graphR значение R
+     */
     public void setGraphR(Double graphR) { this.graphR = graphR; }
 
     // ==================== Business Methods ====================
@@ -181,7 +374,6 @@ public class PointCheckBean {
      *   <li>Проверяет, что выбрано хотя бы одно значение R</li>
      *   <li>Валидирует все точки через {@link PointValidationBean#validateForm(Point)}</li>
      * </ul>
-     *
      *
      * <p>Для каждого выбранного значения R создаётся точка с одинаковыми X и Y,
      * выполняется проверка попадания и сохраняются результаты.
@@ -305,6 +497,12 @@ public class PointCheckBean {
         historyBean.saveBatch(entries);
     }
 
+    /**
+     * Форматирует список некорректных точек для отображения в сообщении об ошибке.
+     *
+     * @param invalidPoints список некорректных точек
+     * @return строка с форматированными координатами точек
+     */
     private static String formatInvalidPoints(List<Point> invalidPoints) {
         return invalidPoints.stream()
                 .map(p -> Messages.format("point.format", p.x(), p.y(), p.r()))

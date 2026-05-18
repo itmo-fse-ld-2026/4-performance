@@ -25,7 +25,6 @@ import java.util.List;
  *   <li>Результат упаковывается в {@link CheckResult}</li>
  * </ol>
  *
- *
  * @author Vladislav Dyadev
  * @version 1.0
  * @see QuadrantShapeTemplate
@@ -33,6 +32,10 @@ import java.util.List;
  * @see CheckResult
  */
 public class AreaCheckService {
+    /**
+     * Список шаблонов фигур по квадрантам.
+     * Определяет, какие фигуры и в каких квадрантах будут проверяться.
+     */
     private final List<QuadrantShapeTemplate> shapeTemplates;
 
     /**

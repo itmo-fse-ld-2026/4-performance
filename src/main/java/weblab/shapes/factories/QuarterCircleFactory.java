@@ -16,7 +16,6 @@ import weblab.shapes.templates.Shape;
  *   <li>Четверть круга с радиусом 2R: new QuarterCircleFactory(2.0)</li>
  * </ul>
  *
- *
  * <p>В текущей конфигурации приложения используется фабрика с {@code radiusRatio = 0.5},
  * что соответствует четверти круга с радиусом R/2.
  *
@@ -26,6 +25,9 @@ import weblab.shapes.templates.Shape;
  * @see QuarterCircle
  */
 public class QuarterCircleFactory implements ShapeFactory {
+    /**
+     * Коэффициент масштабирования радиуса четверти круга относительно R.
+     */
     private final double radiusRatio;
 
     /**

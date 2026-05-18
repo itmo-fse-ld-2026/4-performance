@@ -13,7 +13,6 @@ import weblab.models.Point;
  *   <li>вершина C: (0, height) — на оси Y</li>
  * </ul>
  *
- *
  * <p>Гипотенуза проходит от точки (base, 0) до (0, height) и описывается
  * уравнением: y = (-height/base) * x + height.
  *
@@ -30,7 +29,14 @@ import weblab.models.Point;
  * @see QuadrantShape
  */
 public class Triangle implements Shape {
+    /**
+     * Основание треугольника. Откладывается по оси X.
+     */
     private final double base;
+
+    /**
+     * Высота треугольника. Откладывается по оси Y.
+     */
     private final double height;
 
     /**
@@ -56,7 +62,6 @@ public class Triangle implements Shape {
      *   <li>Точка находится на гипотенузе или ниже неё:
      *       y ≤ (-height/base) * x + height</li>
      * </ul>
-     *
      *
      * @param p проверяемая точка
      * @return {@code true}, если точка находится внутри или на границе треугольника,

@@ -22,7 +22,14 @@ import weblab.models.Point;
  * @see QuadrantShape
  */
 public class Rectangle implements Shape {
+    /**
+     * Ширина прямоугольника. Откладывается по оси X.
+     */
     private final double width;
+
+    /**
+     * Высота прямоугольника. Откладывается по оси Y.
+     */
     private final double height;
 
     /**
@@ -46,7 +53,6 @@ public class Rectangle implements Shape {
      *   <li>X координата не превышает ширину (x ≤ width)</li>
      *   <li>Y координата не превышает высоту (y ≤ height)</li>
      * </ul>
-     *
      *
      * @param p проверяемая точка
      * @return {@code true}, если точка находится внутри или на границе прямоугольника,

@@ -19,7 +19,6 @@ import java.sql.Statement;
  *   <li>Предоставление подключений к базе данных</li>
  * </ul>
  *
- *
  * <p>DataSource ищется по JNDI имени {@code java:/jdbc/web3DB},
  * что предполагает настройку ресурса в контейнере сервлетов (Tomcat, JBoss и т.д.).
  *
@@ -38,6 +37,10 @@ public class DBUtil {
      */
     public static DataSource ds;
 
+    /**
+     * Статический блок инициализации DataSource и создания таблицы.
+     * Выполняется один раз при загрузке класса.
+     */
     static {
         try {
             InitialContext ctx = new InitialContext();
@@ -47,6 +50,13 @@ public class DBUtil {
         } catch (NamingException | SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Приватный конструктор, запрещающий создание экземпляров утилитарного класса.
+     */
+    private DBUtil() {
+        // Приватный конструктор для утилитарного класса
     }
 
     /**

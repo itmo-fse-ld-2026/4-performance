@@ -22,7 +22,14 @@ import weblab.shapes.factories.ShapeFactory;
  * @see weblab.services.AreaCheckService
  */
 public class QuadrantShapeTemplate {
+    /**
+     * Фабрика для создания фигуры определённого типа с заданными пропорциями.
+     */
     private final ShapeFactory factory;
+
+    /**
+     * Номер квадранта (1, 2, 3 или 4), в котором размещается фигура.
+     */
     private final int quadrant;
 
     /**

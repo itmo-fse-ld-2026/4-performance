@@ -23,7 +23,6 @@ import java.util.List;
  *   <li>Очистка всех результатов</li>
  * </ul>
  *
- *
  * @author Vladislav Dyadev
  * @version 1.0
  * @see ResultDAO
@@ -32,6 +31,16 @@ import java.util.List;
 @Named("historyBean")
 @ApplicationScoped
 public class HistoryBean {
+    /**
+     * Конструктор по умолчанию.
+     */
+    public HistoryBean() {
+        // Конструктор по умолчанию
+    }
+
+    /**
+     * Data Access Object для работы с базой данных результатов.
+     */
     private final ResultDAO dao = new ResultDAO();
 
     /**

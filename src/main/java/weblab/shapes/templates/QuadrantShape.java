@@ -17,7 +17,6 @@ import weblab.models.Point;
  *   <li>Квадрант 4: (x, y) → (x, -y) — отражение по оси X</li>
  * </ul>
  *
- *
  * <p>После преобразования точка проверяется исходной фигурой, которая определена
  * для работы с неотрицательными координатами.
  *
@@ -27,7 +26,14 @@ import weblab.models.Point;
  * @see weblab.shapes.QuadrantShapeTemplate
  */
 public class QuadrantShape implements Shape {
+    /**
+     * Исходная фигура, определённая для первого квадранта.
+     */
     private final Shape shape;
+
+    /**
+     * Номер квадранта (1, 2, 3 или 4), определяющий трансформацию координат.
+     */
     private final int quadrant;
 
     /**

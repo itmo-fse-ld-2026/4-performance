@@ -17,14 +17,20 @@ import weblab.shapes.templates.Shape;
  *   <li>Прямоугольник R×2R: new RectangleFactory(1.0, 2.0)</li>
  * </ul>
  *
- *
  * @author Vladislav Dyadev
  * @version 1.0
  * @see ShapeFactory
  * @see Rectangle
  */
 public class RectangleFactory implements ShapeFactory {
+    /**
+     * Коэффициент масштабирования ширины прямоугольника относительно R.
+     */
     private final double widthRatio;
+
+    /**
+     * Коэффициент масштабирования высоты прямоугольника относительно R.
+     */
     private final double heightRatio;
 
     /**

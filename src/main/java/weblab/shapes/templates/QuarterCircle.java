@@ -21,6 +21,9 @@ import weblab.models.Point;
  * @see QuadrantShape
  */
 public class QuarterCircle implements Shape {
+    /**
+     * Радиус четверти круга. Определяет границу области.
+     */
     private final double radius;
 
     /**
@@ -41,7 +44,6 @@ public class QuarterCircle implements Shape {
      *   <li>Y координата неотрицательна (y ≥ 0)</li>
      *   <li>Расстояние от начала координат не превышает радиус: x² + y² ≤ radius²</li>
      * </ul>
-     *
      *
      * @param p проверяемая точка
      * @return {@code true}, если точка находится внутри или на границе четверти круга,

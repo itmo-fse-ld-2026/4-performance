@@ -19,12 +19,18 @@ package weblab.db;
  *   <li>{@code exec_time} - время выполнения проверки в миллисекундах</li>
  * </ul>
  *
- *
  * @author Vladislav Dyadev
  * @version 1.0
  * @see weblab.models.HistoryEntry
  */
 public class SQLQueries {
+    /**
+     * Приватный конструктор, запрещающий создание экземпляров утилитарного класса.
+     */
+    private SQLQueries() {
+        // Приватный конструктор для утилитарного класса
+    }
+
     /**
      * SQL-запрос для создания таблицы результатов.
      *
@@ -58,7 +64,6 @@ public class SQLQueries {
      *   <li>timestamp - время проверки</li>
      *   <li>exec_time - время выполнения</li>
      * </ol>
-     *
      */
     public static final String INSERT_RESULT = """
         INSERT INTO results (x, y, r, hit, session_id, timestamp, exec_time) 

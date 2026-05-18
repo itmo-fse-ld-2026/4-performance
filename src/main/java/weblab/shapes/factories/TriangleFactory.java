@@ -17,14 +17,20 @@ import weblab.shapes.templates.Triangle;
  *   <li>Треугольник 1:2 (высота в 2 раза больше основания): new TriangleFactory(1.0, 2.0)</li>
  * </ul>
  *
- *
  * @author Vladislav Dyadev
  * @version 1.0
  * @see ShapeFactory
  * @see Triangle
  */
 public class TriangleFactory implements ShapeFactory {
+    /**
+     * Коэффициент масштабирования основания треугольника относительно R.
+     */
     private final double baseRatio;
+
+    /**
+     * Коэффициент масштабирования высоты треугольника относительно R.
+     */
     private final double heightRatio;
 
     /**
