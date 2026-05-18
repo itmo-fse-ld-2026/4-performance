@@ -3,21 +3,1704 @@
 \subsubsection{Листинг}
 
 \begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
-...
+<target name="compile-tests">
+        <echo message="Compiling JUnit tests..."/>
+
+        <delete dir="${fse.test.target}" />
+        <mkdir dir="${fse.test.target}"/>
+
+        <javac srcdir="${fse.test.source}"
+               destdir="${fse.test.target}"
+               source="${fse.compile.jvm.source}"
+               target="${fse.compile.jvm.target}"
+               includeantruntime="false">
+            <classpath>
+                <path refid="fse.ivy.path.test"/>
+                <pathelement location="${fse.compile.target}"/>
+            </classpath>
+        </javac>
+
+        <echo message="Done task 'compile-tests'!" />
+    </target>
+
+    <target name="test" depends="build">
+        <echo message="Running JUnit tests..."/>
+
+        <antcall target="compile-tests" />
+
+        <condition property="junit.reports.arg" value="--reports-dir=${fse.test.target}/${fse.test.reports.subdir}" else="">
+            <isset property="fse.test.report.output"/>
+        </condition>
+
+        <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
+            <jvmarg value="-Xshare:off"/>
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+                <path refid="fse.ivy.path.test"/>
+                <pathelement location="${fse.compile.target}"/>
+                <pathelement location="${fse.test.target}"/>
+            </classpath>
+            <arg value="execute"/>
+            <arg value="--scan-classpath"/>
+            <arg value="--details=verbose"/>
+            <arg line="${junit.reports.arg}"/>
+        </java>
+
+        <echo message="Done task 'test'!" />
+    </target>
 \end{lstlisting}
 
 \subsubsection{Комментарии}
 
-\dots
+\texttt{compile-tests} — компиляция JUnit-тестов с использованием отдельного classpath \texttt{fse.ivy.path.test}, который содержит тестовые зависимости (JUnit, Mockito). Перед компиляцией директория с тестами удаляется для обеспечения чистой сборки.
+
+\texttt{test} — запуск тестов через JUnit ConsoleLauncher. Перед запуском вызывает \texttt{compile-tests} через \texttt{antcall}, чтобы гарантировать актуальность тестовых классов. Поддерживает условную генерацию XML-отчётов при передаче параметра \texttt{fse.test.report.output}. В случае падения любого теста сборка останавливается с ошибкой.
 
 \subsubsection{Значения используемых параметров}
 
 \begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
-...
+fse.test.source = src/test/java
+fse.test.target = build-test
+fse.test.reports.subdir = reports
+fse.compile.target = build
+fse.compile.jvm.source = 17
+fse.compile.jvm.target = 17
 \end{lstlisting}
 
 \subsubsection{Лог}
 
 \begin{lstlisting}[caption={Лог цели \texttt{test}},language={},captionpos=b]
-...
+Buildfile: /project/build.xml
+
+compile:
+     [echo] Compiling the project from src/main/java...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+     [copy] Copying 2 files to /project/build
+    [javac] Compiling 24 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+build:
+     [echo] Building the project...
+   [delete] Deleting directory /project/target
+    [mkdir] Created dir: /project/target
+     [copy] Copying 8 files to /project/target
+     [copy] Copying 26 files to /project/target/WEB-INF/classes
+     [copy] Copying 25 files to /project/target/WEB-INF/lib
+      [jar] Building jar: /project/target/web3-1.0.0.war
+     [echo] Done task 'build'!
+
+test:
+     [echo] Running JUnit tests...
+
+compile-tests:
+     [echo] Compiling JUnit tests...
+   [delete] Deleting directory /project/build-test
+    [mkdir] Created dir: /project/build-test
+    [javac] Compiling 8 source files to /project/build-test
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile-tests'!
+     [java]
+     [java] Thanks for using JUnit! Support its development at https://junit.org/sponsoring
+     [java]
+     [java] Test plan execution started. Number of static tests: 120
+     [java] ╷
+     [java] ├─ JUnit Jupiter
+     [java] │  ├─ Тесты прямоугольника
+     [java] │  │  ├─ Точка на нижней границе (y = 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointOnBottomBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointOnBottomBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 36 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на правой границе (x = width) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointOnRightBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointOnRightBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 4 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на левой границе (x = 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointOnLeftBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointOnLeftBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка в правом верхнем углу (width, height) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointAtTopRightCornerShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointAtTopRightCornerShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 3 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательными x и y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointWithNegativeXYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointWithNegativeXYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 3 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательным y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointWithNegativeYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointWithNegativeYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка внутри прямоугольника - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointInsideRectangleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointInsideRectangleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на верхней границе (y = height) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointOnTopBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointOnTopBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка выше верхней границы (y > height) - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointAboveTopBoundaryShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointAboveTopBoundaryShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка справа от правой границы (x > width) - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointRightOfRightBoundaryShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointRightOfRightBoundaryShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательным x - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointWithNegativeXShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointWithNegativeXShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка в левом нижнем углу (0, 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[method:pointAtBottomLeftCornerShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'pointAtBottomLeftCornerShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 4 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Параметризованный тест прямоугольника
+     [java] │  │  │  ├─ [1] 1.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [1] 1.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#1]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 38 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [2] 2.5, 1.5, true dynamically registered
+     [java] │  │  │  ├─ [2] 2.5, 1.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#2]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [3] 4.9, 2.9, true dynamically registered
+     [java] │  │  │  ├─ [3] 4.9, 2.9, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#3]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [4] 0.0, 0.0, true dynamically registered
+     [java] │  │  │  ├─ [4] 0.0, 0.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#4]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [5] 5.0, 3.0, true dynamically registered
+     [java] │  │  │  ├─ [5] 5.0, 3.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#5]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [6] 0.0, 1.5, true dynamically registered
+     [java] │  │  │  ├─ [6] 0.0, 1.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#6]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [7] 2.5, 0.0, true dynamically registered
+     [java] │  │  │  ├─ [7] 2.5, 0.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#7]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [8] 5.0, 1.5, true dynamically registered
+     [java] │  │  │  ├─ [8] 5.0, 1.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#8]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [9] 2.5, 3.0, true dynamically registered
+     [java] │  │  │  ├─ [9] 2.5, 3.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#9]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [10] 5.1, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [10] 5.1, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#10]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [11] 1.0, 3.1, false dynamically registered
+     [java] │  │  │  ├─ [11] 1.0, 3.1, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#11]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [12] -1.0, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [12] -1.0, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#12]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 3 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [13] 1.0, -1.0, false dynamically registered
+     [java] │  │  │  ├─ [13] 1.0, -1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#13]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [14] -1.0, -1.0, false dynamically registered
+     [java] │  │  │  ├─ [14] -1.0, -1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#14]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 3 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [15] 6.0, 4.0, false dynamically registered
+     [java] │  │  │  ├─ [15] 6.0, 4.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#15]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.RectangleTest]/[test-template:rectangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.RectangleTest', methodName = 'rectangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  └─ Параметризованный тест прямоугольника finished after 160 ms.
+     [java] │  └─ Тесты прямоугольника finished after 264 ms.
+     [java] │  ├─ Тесты сервиса проверки областей попадания
+     [java] │  │  ├─ Квадрант 4: точка на дуге - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant4PointOnArcShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant4PointOnArcShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 22 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка внутри треугольника - должнен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant1PointInsideTriangleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant1PointInsideTriangleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 4: точка за дугой - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant4PointOutsideArcShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant4PointOutsideArcShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 4: точка внутри четверти круга - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant4PointInsideQuarterCircleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant4PointInsideQuarterCircleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 2: точка вне прямоугольника - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant2PointOutsideRectangleShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant2PointOutsideRectangleShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Несколько точек - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:multiplePointsShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'multiplePointsShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 4 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка на границе треугольника - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant1PointOnTriangleBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant1PointOnTriangleBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Пустой список точек - должен вернуть пустой список
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:emptyPointsListShouldReturnEmptyList()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'emptyPointsListShouldReturnEmptyList', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка в начале координат - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:originPointShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'originPointShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 3: нет фигуры - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant3NoShapeShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant3NoShapeShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 2: точка на границе прямоугольника - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant2PointOnRectangleBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant2PointOnRectangleBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точки с разными R должны корректно масштабироваться - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:pointsWithDifferentRShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'pointsWithDifferentRShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка вне треугольника по x - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant1PointXOutOfTriangleShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant1PointXOutOfTriangleShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка выше гипотенузы - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant1PointAboveHypotenuseShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant1PointAboveHypotenuseShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 2: точка внутри прямоугольника - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]/[method:quadrant2PointInsideRectangleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.AreaCheckServiceTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.AreaCheckServiceTest', methodName = 'quadrant2PointInsideRectangleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  └─ Тесты сервиса проверки областей попадания finished after 57 ms.
+     [java] │  ├─ Тесты попадания точки по списку фигур
+     [java] │  │  ├─ Две фигуры, точка внутри первой - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:twoShapesWithPointInsideFirstShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'twoShapesWithPointInsideFirstShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Пустой список фигур - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:emptyShapesListShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'emptyShapesListShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Отрицательные координаты - точка не должна попасть (если фигура только в 1-м квадранте) - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:negativeCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'negativeCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Одна фигура, точка снаружи - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:singleShapeWithPointOutsideShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'singleShapeWithPointOutsideShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Одна фигура, точка внутри - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:singleShapeWithPointInsideShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'singleShapeWithPointInsideShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Прямоугольник, треугольник и четверть круга - точка в круге - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:allThreeShapes_pointInCircleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'allThreeShapes_pointInCircleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с большими координатами - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:veryLargePointShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'veryLargePointShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Прямоугольник и треугольник, точка в прямоугольнике - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:rectangleAndTriangleWithPointInRectangleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'rectangleAndTriangleWithPointInRectangleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Прямоугольник и треугольник, точка в треугольнике - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:rectangleAndTriangleWithPointInTriangleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'rectangleAndTriangleWithPointInTriangleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка (0,0) - должна попадать в любую фигуру в 1-м квадранте - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:originPointShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'originPointShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на границе фигуры - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:pointOnBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'pointOnBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Две фигуры, точка внутри второй - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:twoShapesWithPointInsideSecondShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'twoShapesWithPointInsideSecondShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Прямоугольник, треугольник и четверть круга - точка нигде - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:allThreeShapes_pointNowhereShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'allThreeShapes_pointNowhereShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Две фигуры, точка снаружи обеих - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]/[method:twoShapesWithPointOutsideBothShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.services.HitCheckerTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.services.HitCheckerTest', methodName = 'twoShapesWithPointOutsideBothShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  └─ Тесты попадания точки по списку фигур finished after 25 ms.
+     [java] │  ├─ Тесты трансформации по квадрантам
+     [java] │  │  ├─ Квадрант 3: точка с отрицательным x - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant3NegativeXShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant3NegativeXShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 7 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Треугольник в квадранте 2: точка с отрицательными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:triangleInQuadrant2NegativeCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'triangleInQuadrant2NegativeCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 3 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 4: точка с отрицательным y трансформируется - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant4NegativeYShouldTransformAndReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant4NegativeYShouldTransformAndReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 4 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка с положительными координатами - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant1PositiveCoordinatesShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant1PositiveCoordinatesShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 4: точка с отрицательным x - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant4NegativeXShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant4NegativeXShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 3: точка с отрицательными координатами трансформируется - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant3NegativeCoordinatesShouldTransformAndReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant3NegativeCoordinatesShouldTransformAndReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 7 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Четверть круга в квадранте 4: точка с положительными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quarterCircleInQuadrant4PositiveCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quarterCircleInQuadrant4PositiveCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 3 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка с отрицательным y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant1NegativeYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant1NegativeYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 2: точка с положительными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant2PositiveCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant2PositiveCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Треугольник в квадранте 2: точка с отрицательным x трансформируется - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:triangleInQuadrant2NegativeXShouldTransformAndReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'triangleInQuadrant2NegativeXShouldTransformAndReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 3: точка с положительными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant3PositiveCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant3PositiveCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 2: точка с отрицательным y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant2NegativeYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant2NegativeYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка с отрицательным x - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant1NegativeXShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant1NegativeXShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 3 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 4: точка с положительными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant4PositiveCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant4PositiveCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 10 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 1: точка с отрицательными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant1NegativeCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant1NegativeCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Четверть круга в квадранте 4: точка с отрицательным y трансформируется - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quarterCircleInQuadrant4NegativeYShouldTransformAndReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quarterCircleInQuadrant4NegativeYShouldTransformAndReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 5 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 2: точка с отрицательными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant2NegativeCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant2NegativeCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 3: точка с отрицательным y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant3NegativeYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant3NegativeYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 4 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 4: точка с отрицательными координатами - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant4NegativeCoordinatesShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant4NegativeCoordinatesShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 12 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Квадрант 2: точка с отрицательным x трансформируется - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]/[method:quadrant2NegativeXShouldTransformAndReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuadrantShapeTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuadrantShapeTest', methodName = 'quadrant2NegativeXShouldTransformAndReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  └─ Тесты трансформации по квадрантам finished after 94 ms.
+     [java] │  ├─ Тесты треугольника
+     [java] │  │  ├─ Точка выше высоты (y > height) - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointAboveHeightShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointAboveHeightShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 3 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на нижней границе (y=0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointOnBottomBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointOnBottomBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на левой границе (x=0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointOnLeftBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointOnLeftBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательными x и y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointWithNegativeXYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointWithNegativeXYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка в вершине (0, height) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointAtHeightVertexShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointAtHeightVertexShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательным y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointWithNegativeYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointWithNegativeYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка выше гипотенузы - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointAboveHypotenuseShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointAboveHypotenuseShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка справа от основания (x > base) - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointRightOfBaseShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointRightOfBaseShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка внутри треугольника - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointInsideTriangleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointInsideTriangleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 11 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательным x - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointWithNegativeXShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointWithNegativeXShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 7 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка в вершине (0, 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointAtOriginShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointAtOriginShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Параметризованный тест треугольника
+     [java] │  │  │  ├─ [1] 0.5, 0.25, true dynamically registered
+     [java] │  │  │  ├─ [1] 0.5, 0.25, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#1]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [2] 1.0, 0.5, true dynamically registered
+     [java] │  │  │  ├─ [2] 1.0, 0.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#2]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [3] 1.5, 0.5, true dynamically registered
+     [java] │  │  │  ├─ [3] 1.5, 0.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#3]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [4] 2.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [4] 2.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#4]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [5] 2.5, 0.5, true dynamically registered
+     [java] │  │  │  ├─ [5] 2.5, 0.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#5]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [6] 3.0, 0.5, true dynamically registered
+     [java] │  │  │  ├─ [6] 3.0, 0.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#6]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [7] 0.0, 0.0, true dynamically registered
+     [java] │  │  │  ├─ [7] 0.0, 0.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#7]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [8] 4.0, 0.0, true dynamically registered
+     [java] │  │  │  ├─ [8] 4.0, 0.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#8]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [9] 0.0, 4.0, true dynamically registered
+     [java] │  │  │  ├─ [9] 0.0, 4.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#9]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [10] 2.0, 2.0, true dynamically registered
+     [java] │  │  │  ├─ [10] 2.0, 2.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#10]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [11] 0.0, 2.0, true dynamically registered
+     [java] │  │  │  ├─ [11] 0.0, 2.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#11]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [12] 2.0, 0.0, true dynamically registered
+     [java] │  │  │  ├─ [12] 2.0, 0.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#12]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [13] 1.0, 3.0, true dynamically registered
+     [java] │  │  │  ├─ [13] 1.0, 3.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#13]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [14] 3.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [14] 3.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#14]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [15] 1.0, 2.0, true dynamically registered
+     [java] │  │  │  ├─ [15] 1.0, 2.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#15]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [16] 3.0, 1.5, false dynamically registered
+     [java] │  │  │  ├─ [16] 3.0, 1.5, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#16]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 4 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [17] 1.0, 3.5, false dynamically registered
+     [java] │  │  │  ├─ [17] 1.0, 3.5, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#17]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 3 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [18] 2.5, 2.0, false dynamically registered
+     [java] │  │  │  ├─ [18] 2.5, 2.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#18]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [19] 5.0, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [19] 5.0, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#19]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [20] 1.0, 5.0, false dynamically registered
+     [java] │  │  │  ├─ [20] 1.0, 5.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#20]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [21] -1.0, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [21] -1.0, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#21]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 6 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [22] 1.0, -1.0, false dynamically registered
+     [java] │  │  │  ├─ [22] 1.0, -1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#22]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 5 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [23] -1.0, -1.0, false dynamically registered
+     [java] │  │  │  ├─ [23] -1.0, -1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#23]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [24] 5.0, 5.0, false dynamically registered
+     [java] │  │  │  ├─ [24] 5.0, 5.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#24]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[test-template:triangleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'triangleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 3 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  └─ Параметризованный тест треугольника finished after 92 ms.
+     [java] │  │  ├─ Точка на гипотенузе - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointOnHypotenuseShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointOnHypotenuseShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка в вершине (base, 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]/[method:pointAtBaseVertexShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.TriangleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.TriangleTest', methodName = 'pointAtBaseVertexShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  └─ Тесты треугольника finished after 152 ms.
+     [java] │  ├─ Тесты четверти круга
+     [java] │  │  ├─ Точка с отрицательными x и y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointWithNegativeXYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointWithNegativeXYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 11 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на оси X (x > 0, y = 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointOnXAxisShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointOnXAxisShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на оси Y (x = 0, y > 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointOnYAxisShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointOnYAxisShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательным y - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointWithNegativeYShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointWithNegativeYShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка с отрицательным x - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointWithNegativeXShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointWithNegativeXShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка в начале координат (0, 0) - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointAtOriginShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointAtOriginShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка внутри четверти круга - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointInsideQuarterCircleShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointInsideQuarterCircleShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Параметризованный тест четверти круга
+     [java] │  │  │  ├─ [1] 2.0, 2.0, true dynamically registered
+     [java] │  │  │  ├─ [1] 2.0, 2.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#1]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 8 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [2] 3.0, 4.0, true dynamically registered
+     [java] │  │  │  ├─ [2] 3.0, 4.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#2]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 3 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [3] 4.0, 3.0, true dynamically registered
+     [java] │  │  │  ├─ [3] 4.0, 3.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#3]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [4] 0.0, 5.0, true dynamically registered
+     [java] │  │  │  ├─ [4] 0.0, 5.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#4]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [5] 5.0, 0.0, true dynamically registered
+     [java] │  │  │  ├─ [5] 5.0, 0.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#5]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [6] 0.0, 0.0, true dynamically registered
+     [java] │  │  │  ├─ [6] 0.0, 0.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#6]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [7] 1.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [7] 1.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#7]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [8] 3.5, 3.5, true dynamically registered
+     [java] │  │  │  ├─ [8] 3.5, 3.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#8]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [9] 4.0, 4.0, false dynamically registered
+     [java] │  │  │  ├─ [9] 4.0, 4.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#9]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 3 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [10] 6.0, 0.0, false dynamically registered
+     [java] │  │  │  ├─ [10] 6.0, 0.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#10]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [11] 0.0, 6.0, false dynamically registered
+     [java] │  │  │  ├─ [11] 0.0, 6.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#11]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [12] -2.0, 2.0, false dynamically registered
+     [java] │  │  │  ├─ [12] -2.0, 2.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#12]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [13] 2.0, -2.0, false dynamically registered
+     [java] │  │  │  ├─ [13] 2.0, -2.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#13]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [14] -2.0, -2.0, false dynamically registered
+     [java] │  │  │  ├─ [14] -2.0, -2.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]/[test-template-invocation:#14]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[test-template:quarterCircleContainsShouldReturnExpectedResult(double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'quarterCircleContainsShouldReturnExpectedResult', methodParameterTypes = 'double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  └─ Параметризованный тест четверти круга finished after 44 ms.
+     [java] │  │  ├─ Точка за пределами круга - должна вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointOutsideArcShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointOutsideArcShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Точка на дуге - должна вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]/[method:pointOnArcShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.shapes.templates.QuarterCircleTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.shapes.templates.QuarterCircleTest', methodName = 'pointOnArcShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  └─ Тесты четверти круга finished after 74 ms.
+     [java] │  ├─ Тесты валидации точек
+     [java] │  │  ├─ Y = 3 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yThreeShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yThreeShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 9 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ X на нижней границе - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:xAtMinBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'xAtMinBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ X дробное значение - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:xFractionalShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'xFractionalShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ X больше верхней границы - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:xGreaterThanMaxShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'xGreaterThanMaxShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ R = 1 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:rOneShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'rOneShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ X на верхней границе - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:xAtMaxBoundaryShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'xAtMaxBoundaryShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = -1 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yMinus1ShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yMinus1ShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Валидная точка - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:validPointShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validPointShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ R = 2 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:rTwoShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'rTwoShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = 0 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yZeroShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yZeroShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 2 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = 5 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yFiveShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yFiveShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ R = 3 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:rThreeShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'rThreeShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = 4 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yFourShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yFourShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = 1 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yOneShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yOneShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ X меньше нижней границы - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:xLessThanMinShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'xLessThanMinShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = -2 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yMinus2ShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yMinus2ShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ R = 0.5 - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:rLessThanMinShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'rLessThanMinShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = 2 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yTwoShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yTwoShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y дробное значение - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yFractionalShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yFractionalShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Параметризованный тест валидации формы
+     [java] │  │  │  ├─ [1] -3.0, 0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [1] -3.0, 0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#1]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 43 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [2] 5.0, 0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [2] 5.0, 0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#2]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [3] 0.0, -3, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [3] 0.0, -3, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#3]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [4] 0.0, 5, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [4] 0.0, 5, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#4]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [5] 0.0, 0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [5] 0.0, 0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#5]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [6] 0.0, 0, 3.0, true dynamically registered
+     [java] │  │  │  ├─ [6] 0.0, 0, 3.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#6]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [7] 2.5, 3, 2.0, true dynamically registered
+     [java] │  │  │  ├─ [7] 2.5, 3, 2.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#7]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [8] -1.5, -2, 1.5, true dynamically registered
+     [java] │  │  │  ├─ [8] -1.5, -2, 1.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#8]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [9] 3.7, 4, 2.5, true dynamically registered
+     [java] │  │  │  ├─ [9] 3.7, 4, 2.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#9]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [10] -3.1, 0, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [10] -3.1, 0, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#10]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [11] 5.1, 0, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [11] 5.1, 0, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#11]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 7 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [12] 0.0, -4, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [12] 0.0, -4, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#12]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 3 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [13] 0.0, 6, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [13] 0.0, 6, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#13]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [14] 0.0, 2.5, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [14] 0.0, 2.5, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#14]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [15] 0.0, 3.7, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [15] 0.0, 3.7, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#15]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [16] 0.0, 0, 0.5, false dynamically registered
+     [java] │  │  │  ├─ [16] 0.0, 0, 0.5, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#16]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 2 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [17] 0.0, 0, 3.5, false dynamically registered
+     [java] │  │  │  ├─ [17] 0.0, 0, 3.5, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#17]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [18] 0.0, 0, 4.0, false dynamically registered
+     [java] │  │  │  ├─ [18] 0.0, 0, 4.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#18]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateForm_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateForm_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  └─ Параметризованный тест валидации формы finished after 143 ms.
+     [java] │  │  ├─ Y = 6 - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yGreaterThanMaxShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yGreaterThanMaxShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = -4 - должен вернуть false
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yLessThanMinShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yLessThanMinShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ R = 2.5 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:rTwoPointFiveShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'rTwoPointFiveShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Y = -3 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:yMinus3ShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'yMinus3ShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 0 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Параметризованный тест валидации клика по графику
+     [java] │  │  │  ├─ [1] 0.0, 0.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [1] 0.0, 0.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#1]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 14 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [2] -5.0, 0.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [2] -5.0, 0.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#2]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [3] 5.0, 0.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [3] 5.0, 0.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#3]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [4] 0.0, -5.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [4] 0.0, -5.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#4]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [5] 0.0, 5.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [5] 0.0, 5.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#5]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [6] -6.0, 0.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [6] -6.0, 0.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#6]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [7] 6.0, 0.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [7] 6.0, 0.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#7]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [8] 0.0, -6.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [8] 0.0, -6.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#8]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [9] 0.0, 6.0, 1.0, true dynamically registered
+     [java] │  │  │  ├─ [9] 0.0, 6.0, 1.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#9]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [10] -3.5, 2.5, 2.0, true dynamically registered
+     [java] │  │  │  ├─ [10] -3.5, 2.5, 2.0, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#10]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [11] 4.2, -1.8, 1.5, true dynamically registered
+     [java] │  │  │  ├─ [11] 4.2, -1.8, 1.5, true
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#11]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [12] -6.1, 0.0, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [12] -6.1, 0.0, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#12]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [13] 6.1, 0.0, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [13] 6.1, 0.0, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#13]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [14] 0.0, -6.1, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [14] 0.0, -6.1, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#14]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [15] 0.0, 6.1, 1.0, false dynamically registered
+     [java] │  │  │  ├─ [15] 0.0, 6.1, 1.0, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#15]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 0 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [16] 0.0, 0.0, 0.5, false dynamically registered
+     [java] │  │  │  ├─ [16] 0.0, 0.0, 0.5, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#16]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  │  ├─ [17] 0.0, 0.0, 3.5, false dynamically registered
+     [java] │  │  │  ├─ [17] 0.0, 0.0, 3.5, false
+     [java] │  │  │  │       tags: []
+     [java] │  │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]/[test-template-invocation:#17]
+     [java] │  │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[test-template:validateGraphClick_shouldReturnExpectedResult(double, double, double, boolean)]
+     [java] │  │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'validateGraphClick_shouldReturnExpectedResult', methodParameterTypes = 'double, double, double, boolean']
+     [java] │  │  │  │   duration: 1 ms
+     [java] │  │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  └─ Параметризованный тест валидации клика по графику finished after 39 ms.
+     [java] │  │  ├─ R = 3.5 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:rGreaterThanMaxShouldReturnFalse()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'rGreaterThanMaxShouldReturnFalse', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ R = 1.5 - должен вернуть true
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]/[method:rOnePointFiveShouldReturnTrue()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.beans.PointValidationBeanTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.beans.PointValidationBeanTest', methodName = 'rOnePointFiveShouldReturnTrue', methodParameterTypes = '']
+     [java] │  │  │   duration: 1 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  └─ Тесты валидации точек finished after 213 ms.
+     [java] │  ├─ Тесты работы с БД
+     [java] │  │  ├─ Сохранение пустого списка - addBatch не вызывается, executeBatch вызывается
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:saveEmptyListShouldNotExecuteAddBatchButExecuteBatchIsCalled()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'saveEmptyListShouldNotExecuteAddBatchButExecuteBatchIsCalled', methodParameterTypes = '']
+     [java] │  │  │   duration: 1419 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Получение по сессии - корректный маппинг
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:getResultsBySessionShouldMapCorrectly()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'getResultsBySessionShouldMapCorrectly', methodParameterTypes = '']
+     [java] │  │  │   duration: 31 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Очистка всех результатов - DELETE без условий
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:clearResultsShouldExecuteDeleteWithoutConditions()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'clearResultsShouldExecuteDeleteWithoutConditions', methodParameterTypes = '']
+     [java] │  │  │   duration: 27 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Получение всех результатов - должен корректно маппить ResultSet
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:getAllResultsShouldMapResultSetCorrectly()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'getAllResultsShouldMapResultSetCorrectly', methodParameterTypes = '']
+     [java] │  │  │   duration: 40 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Удаление по сессии - сессия не найдена
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:removeResultsBySessionNotFoundDeletesZeroRows()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'removeResultsBySessionNotFoundDeletesZeroRows', methodParameterTypes = '']
+     [java] │  │  │   duration: 14 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Получение по сессии - параметризованный запрос
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:getResultsBySessionShouldUseParameterizedQuery()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'getResultsBySessionShouldUseParameterizedQuery', methodParameterTypes = '']
+     [java] │  │  │   duration: 90 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Получение по сессии - сессия не найдена
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:getResultsBySessionNotFoundShouldReturnEmptyList()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'getResultsBySessionNotFoundShouldReturnEmptyList', methodParameterTypes = '']
+     [java] │  │  │   duration: 8 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Удаление по сессии - DELETE с параметром
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:removeResultsBySessionShouldExecuteParameterizedDelete()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'removeResultsBySessionShouldExecuteParameterizedDelete', methodParameterTypes = '']
+     [java] │  │  │   duration: 11 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Сохранение одной записи - должен выполнить один addBatch
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:saveSingleEntryShouldExecuteOneAddBatch()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'saveSingleEntryShouldExecuteOneAddBatch', methodParameterTypes = '']
+     [java] │  │  │   duration: 23 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Получение всех результатов - пустой ResultSet
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:getAllResultsEmptyShouldReturnEmptyList()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'getAllResultsEmptyShouldReturnEmptyList', methodParameterTypes = '']
+     [java] │  │  │   duration: 17 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Сохранение пакета результатов - должен выполнить batch insert
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:saveResultsBatchShouldExecuteBatchInsert()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'saveResultsBatchShouldExecuteBatchInsert', methodParameterTypes = '']
+     [java] │  │  │   duration: 15 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  │  ├─ Очистка пустой таблицы
+     [java] │  │  │       tags: []
+     [java] │  │  │   uniqueId: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]/[method:clearResultsEmptyTableShouldReturnZero()]
+     [java] │  │  │     parent: [engine:junit-jupiter]/[class:weblab.dao.ResultDAOTest]
+     [java] │  │  │     source: MethodSource [className = 'weblab.dao.ResultDAOTest', methodName = 'clearResultsEmptyTableShouldReturnZero', methodParameterTypes = '']
+     [java] │  │  │   duration: 5 ms
+     [java] │  │  │     status: ✔ SUCCESSFUL
+     [java] │  └─ Тесты работы с БД finished after 3494 ms.
+     [java] └─ JUnit Jupiter finished after 4480 ms.
+     [java] Test plan execution finished. Number of all tests: 208
+     [java]
+     [java] Test run finished after 4547 ms
+     [java] [        14 containers found      ]
+     [java] [         0 containers skipped    ]
+     [java] [        14 containers started    ]
+     [java] [         0 containers aborted    ]
+     [java] [        14 containers successful ]
+     [java] [         0 containers failed     ]
+     [java] [       208 tests found           ]
+     [java] [         0 tests skipped         ]
+     [java] [       208 tests started         ]
+     [java] [         0 tests aborted         ]
+     [java] [       208 tests successful      ]
+     [java] [         0 tests failed          ]
+     [java]
+     [echo] Done task 'test'!
+
+BUILD SUCCESSFUL
+Total time: 12 seconds
 \end{lstlisting}
