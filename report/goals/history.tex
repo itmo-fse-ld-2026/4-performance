@@ -1,0 +1,238 @@
+\subsection{Цель \texttt{history}}
+
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<target name="history">
+  <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
+
+  <java classname="org.tmatesoft.svn.cli.SVN"
+        fork="true"
+        classpathref="fse.ivy.path.ant"
+        dir="${basedir}">
+    <arg value="cleanup"/>
+  </java>
+
+  <java classname="org.tmatesoft.svn.cli.SVN"
+        outputproperty="fse.diff.out"
+        failonerror="true"
+        classpathref="fse.ivy.path.ant"
+        fork="true">
+    <arg value="update"/>
+  </java>
+
+  <antcall target="-history-recursion-start" />
+
+  <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
+
+  <echo message="Done task 'history'!"/>
+</target>
+
+<target name="-history-recursion-start">
+  <trycatch>
+    <try>
+      <antcall target="compile"/>
+      <antcall target="-history-create-log" />
+    </try>
+    <catch>
+      <property name="fse.history.hasErrors" value="true"/>
+      <antcall target="-history-check-if-last" />
+    </catch>
+  </trycatch>
+</target>
+
+<target name="-history-check-if-last">
+  <echo message="[ERR] Failed to compile project! Checking previous revisions..." />
+
+  <java classname="org.tmatesoft.svn.cli.SVN"
+        outputproperty="fse.history.headRev"
+        classpathref="fse.ivy.path.ant"
+        failonerror="true"
+        fork="true">
+    <arg value="info"/>
+    <arg value="--show-item"/>
+    <arg value="revision"/>
+  </java>
+
+  <condition property="fse.history.isNotLast">
+    <not>
+      <equals arg1="${fse.history.headRev}" arg2="${fse.history.startRev}"/>
+    </not>
+  </condition>
+
+  <antcall target="-history-revert" />
+</target>
+
+<target name="-history-revert" if="fse.history.isNotLast" >
+  <echo message="Found previous revision for r${fse.history.headRev}! Reverting..." />
+
+  <java classname="org.tmatesoft.svn.cli.SVN"
+        failonerror="true"
+        classpathref="fse.ivy.path.ant"
+        fork="true">
+    <arg value="update"/>
+    <arg value="-r"/>
+    <arg value="PREV"/>
+  </java>
+
+  <antcall target="-history-recursion-start">
+    <param name="fse.history.hasErrors" value="true"/>
+  </antcall>
+</target>
+
+<target name="-history-create-log" if="fse.history.hasErrors" >
+  <echo message="Found working version! Logging breaking changes..." />
+
+  <loadfile property="fse.broken.rev" srcFile="${java.io.tmpdir}/${fse.history.broken_rev}"/>
+
+  <java classname="org.tmatesoft.svn.cli.SVN" 
+        outputproperty="fse.history.workingRev"
+        classpathref="fse.ivy.path.ant"
+        fork="true">
+    <arg value="info"/>
+    <arg value="--show-item"/>
+    <arg value="revision"/>
+  </java>
+
+  <java classname="org.tmatesoft.svn.cli.SVN" 
+        output="${fse.history.log}"
+        classpathref="fse.ivy.path.ant"
+        fork="true">
+    <arg value="diff"/>
+    <arg value="-r"/>
+    <arg value="${fse.history.workingRev}:${fse.broken.rev}"/>
+  </java>
+</target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
+Пожалуй, самая сложная задача в плане реализации логики, о чём можно судить по размеру листинга.
+
+Все взаимодействия с интерфейсом Subversion происходят через вызов Java-класса из сторонней библиотеки SVNKit \textit{(она добавлена при помощи Apache Ivy)}.
+
+В начале вызываем \texttt{svn cleanup} для снятия блокировок и выполнения незавершённых операций, затем синхронизируем рабочую копию проекта с удалённым репозиторием при помощи \texttt{svn update}.
+
+Логика основного алгоритма имеет рекурсивную природу, поэтому делегируем выполнение цели \texttt{-history-recursion-start}, которая пытается скомпилировать текущую версию проекта. Если всё получилось, то на этом выполнение завершается. Иначе фиксируем ошибку и вызываем цель \texttt{-history-check-if-last}, которая принимает решение о продолжении рекурсивного шага. Если ревизия не первая, то вызываем цель \texttt{-history-revert} для отката и делаем рекурсивный вызов. Как только дойдём до первой компилируемой ревизии, формируем файл с критическими изменениями при помощи цели \texttt{-history-create-log}. 
+
+Задачи применяются примитивные, их описание многократно упоминается в других разделах отчёта. Особенность этой цели в использовании системного свойства \texttt{java.io.tmpdir}: оно используется JVM для хранения временных данных. Оно нужно, чтобы хранить изменяемый номер критической ревизии в отдельном файле --- это сделано из-за ограничения на единоразовую инициализацию переменных в пределах одной цели. \texttt{brokenRev} многократно изменяется и считывается в самом конце для определения номера ревизии, с~которой будет вычисляться критическая разница в логе.
+
+Ещё используется задача \texttt{trycatch} из сторонней библиотеки \textit{Ant-Contrib} \textit{(добавлена при помощи Apache Ivy)}. Она позволяет обработать ошибку и выполнить определённые задачи в случае неудачной компиляции текущей версии проекта \textit{(иначе цель просто упадёт с ошибкой)}.
+
+Наконец, для определения критических изменений используется команда \texttt{svn diff}, которой передаются номера сравниваемых ревизий через ключ \texttt{-r}.
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.history.log = breaking_changes.log
+fse.history.broken_rev = .broken_rev.flag
+fse.history.startRev = 2
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{history} --- нет ошибок},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+history:
+
+-history-recursion-start:
+
+compile:
+     [echo] Compiling the project from src...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+-history-create-log:
+     [echo] Done task 'history'!
+
+BUILD SUCCESSFUL
+Total time: 5 seconds
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Лог цели \texttt{history} --- есть ошибки},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+history:
+
+-history-recursion-start:
+
+compile:
+     [echo] Compiling the project from src...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] /project/src/main/java/weblab/dao/ResultDAO.java:13: error: '(' expected
+    [javac]     public void saveR, p.x());
+    [javac]                      ^
+    [javac] /project/src/main/java/weblab/dao/ResultDAO.java:13: error: <identifier> expected
+    [javac]     public void saveR, p.x());
+    [javac]                           ^
+    ... (skipping some output)
+    [javac] /project/src/main/java/weblab/dao/ResultDAO.java:82: error: class, interface, enum, or record expected
+    [javac]         }
+    [javac]         ^
+    [javac] 46 errors
+    [javac] 1 warning
+
+-history-check-if-last:
+     [echo] [ERR] Failed to compile project! Checking previous revisions...
+
+-history-revert:
+     [echo] Found previous revision for r3! Reverting...
+     [java] Updating '.':
+     [java] U    src/main/java/weblab/dao/ResultDAO.java
+     [java] Updated to revision 2.
+
+-history-recursion-start:
+
+compile:
+     [echo] Compiling the project from src...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+-history-create-log:
+     [echo] Found working version! Logging breaking changes...
+   [delete] Deleting: /tmp/.broken_rev.flag
+     [echo] Done task 'history'!
+
+BUILD SUCCESSFUL
+Total time: 9 seconds
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Содержимое файла \texttt{breaking\_changes.log}},language={},captionpos=b]
+Index: src/main/java/weblab/dao/ResultDAO.java
+===================================================================
+--- src/main/java/weblab/dao/ResultDAO.java	(revision 2)
++++ src/main/java/weblab/dao/ResultDAO.java	(revision 3)
+@@ -10,13 +10,7 @@
+ import java.util.List;
+ 
+ public class ResultDAO {
+-    public void saveResultsBatch(List<HistoryEntry> entries) {
+-        try (Connection conn = DBUtil.getConnection()) {
+-            conn.setAutoCommit(false);
+-            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.INSERT_RESULT)) {
+-                for (HistoryEntry entry : entries) {
+-                    Point p = entry.point();
+-                    ps.setDouble(1, p.x());
++    public void saveR, p.x());
+                     ps.setDouble(2, p.y());
+                     ps.setDouble(3, p.r());
+                     ps.setBoolean(4, entry.result());
+\end{lstlisting}

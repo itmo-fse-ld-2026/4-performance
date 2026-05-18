@@ -1,0 +1,91 @@
+\subsection{Цель \texttt{build}}
+
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<target name="build" depends="compile">
+  <echo message="Building the project..."/>
+
+  <delete dir="${fse.build.target}" />
+  <mkdir dir="${fse.build.target}" />
+  
+  <copy todir="${fse.build.target}">
+    <fileset dir="${fse.build.webapp}" />
+  </copy>
+  <copy todir="${fse.build.target}/WEB-INF/classes">
+    <fileset dir="${fse.compile.target}" />
+  </copy>
+  <copy todir="${fse.build.target}/WEB-INF/lib">
+    <fileset dir="${fse.ant.home}/lib" />
+  </copy>
+
+  <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
+        basedir="${fse.build.source}">
+    <fileset dir="${fse.build.target}" />
+    <manifest>
+      <attribute name="Main-Class" value="${fse.build.main}"/>
+      <attribute name="Specification-Title" value="${fse.build.title}"/>
+      <attribute name="Specification-Version" value="${fse.build.version}"/>
+      <attribute name="Specification-Vendor" value="${fse.build.vendor}"/>
+    </manifest>
+  </jar>
+
+  <echo message="Done task 'build'!" />
+</target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
+В собранном проекте должна соблюдаться структура WAR-архива. Она нужна, чтобы его мог использовать веб-контейнер. Для формирования структуры используется задача \texttt{copy} с типом \texttt{fileset} --- последний указывает набор копируемых данных.
+
+Для сборки проекта в JAR-архив используется одноимённая задача \texttt{jar}. В её теле указываются ссылки на необходимые файлы для WAR-архива, а также дополнительные атрибуты манифеста при помощи одноимённой задачи \texttt{manifest}.
+
+Перед сборкой проекта цель пересоздаёт директорию компиляции во избежание ошибок. Это осуществляется задачами \texttt{remove} и \texttt{mkdir}. Также цели нужны скомпилированные классы, поэтому она зависит от другой цели \texttt{compile}.
+
+Цель оснащена логгирующими сообщениями, которые реализованы с помощью задачи \texttt{echo} \textit{(все упомянутые задачи и типы доступны в составе Apache Ant API)}.
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.build.source = build
+fse.build.target = target
+fse.build.name = web3
+fse.build.main = 
+fse.build.version = 1.0.0
+fse.build.title = FSE Lab #3
+fse.build.vendor = ITMO FSE LD 2026
+fse.build.webapp = src/main/webapp
+
+fse.ant.home = /.ant
+fse.compile.target = build
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{build}},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+compile:
+     [echo] Compiling the project from src...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+build:
+     [echo] Building the project...
+   [delete] Deleting directory /project/target
+    [mkdir] Created dir: /project/target
+     [copy] Copying 8 files to /project/target
+     [copy] Copying 22 files to /project/target/WEB-INF/classes
+     [copy] Copying 32 files to /project/target/WEB-INF/lib
+      [jar] Building jar: /project/target/web3-1.0.0.war
+     [echo] Done task 'build'!
+
+BUILD SUCCESSFUL
+Total time: 4 seconds
+\end{lstlisting}

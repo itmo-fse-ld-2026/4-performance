@@ -1,0 +1,50 @@
+\subsection{Цель \texttt{native2ascii}}
+
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+  <target name="native2ascii">
+    <echo message="Converting localization files from ${fse.i18n.native.dir} to ${fse.i18n.target.dir}..."/>
+
+    <delete dir="${fse.i18n.target.dir}" />
+    <mkdir dir="${fse.i18n.target.dir}" />
+
+    <native2ascii encoding="${fse.i18n.encoding}"
+                  src="${fse.i18n.native.dir}"
+                  dest="${fse.i18n.target.dir}"
+                  includes="${fse.i18n.includes}"
+                  ext="${fse.i18n.ext}"/>
+
+    <echo message="Done task 'native2ascii'!" />
+  </target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
+Преобразует файлы локализации из UTF-8 в ASCII-совместимый формат с escape-последовательностями. Это необходимо для корректной работы русскоязычных строк в Java-приложении независимо от платформы. Перед преобразованием директория назначения удаляется для обеспечения чистой сборки.
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.i18n.native.dir = src/main/i18n-native
+fse.i18n.target.dir = build-i18n
+fse.i18n.includes = weblab/messages*.properties
+fse.i18n.encoding = UTF-8
+fse.i18n.ext = .properties
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{native2ascii}},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+native2ascii:
+     [echo] Converting localization files from src/main/i18n-native to build-i18n...
+   [delete] Deleting directory /project/build-i18n
+    [mkdir] Created dir: /project/build-i18n
+[native2ascii] Converting 2 files from /project/src/main/i18n-native to /project/build-i18n
+     [echo] Done task 'native2ascii'!
+
+BUILD SUCCESSFUL
+Total time: 0 seconds
+\end{lstlisting}

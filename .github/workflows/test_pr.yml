@@ -1,0 +1,117 @@
+name: Test Pull Request
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, synchronize, edited, reopened]
+
+jobs:
+  docker_changes:
+    runs-on: ubuntu-latest
+    env:
+      WATCH_LIST: "docker/"
+    outputs:
+      docker: ${{ steps.filter.outputs.docker }}
+      full_image_dev: ${{ steps.get_image.outputs.full_image_dev }}
+      full_image_web: ${{ steps.get_image.outputs.full_image_web }}
+      full_image_pdf: ${{ steps.get_image.outputs.full_image_pdf }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check for changes since the last push in WATCH_LIST
+        id: filter
+        run: |
+          if git diff --quiet ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- $WATCH_LIST; then
+            echo "docker=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in: $WATCH_LIST"
+          else
+            echo "docker=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in: $WATCH_LIST"
+          fi
+      
+      - name: Determine Docker Tag
+        id: get_image
+        run: |
+          OWNER=${{ github.repository_owner }}
+          IMAGE_PDF=$(cat docker/IMAGE_PDF)
+          IMAGE_WEB=$(cat docker/IMAGE_WEB)
+          IMAGE_DEV=$(cat docker/IMAGE_DEV)
+
+          IMAGE_PDF_PATH="ghcr.io/${OWNER,,}/${IMAGE_PDF}"
+          IMAGE_WEB_PATH="ghcr.io/${OWNER,,}/${IMAGE_WEB}"
+          IMAGE_DEV_PATH="ghcr.io/${OWNER,,}/${IMAGE_DEV}"
+          PR_TAG="pr-${{ github.event.pull_request.number }}"
+
+          if [ "${{ steps.filter.outputs.docker }}" == "true" ] || docker manifest inspect ${IMAGE_PDF_PATH}:${PR_TAG} > /dev/null 2>&1; then
+            echo "full_image_pdf=${IMAGE_PDF_PATH}:${PR_TAG}" >> $GITHUB_OUTPUT
+            echo "full_image_web=${IMAGE_WEB_PATH}:${PR_TAG}" >> $GITHUB_OUTPUT
+            echo "full_image_dev=${IMAGE_DEV_PATH}:${PR_TAG}" >> $GITHUB_OUTPUT
+          else
+            echo "full_image_pdf=${IMAGE_PDF_PATH}:dev" >> $GITHUB_OUTPUT
+            echo "full_image_web=${IMAGE_WEB_PATH}:dev" >> $GITHUB_OUTPUT
+            echo "full_image_dev=${IMAGE_DEV_PATH}:dev" >> $GITHUB_OUTPUT
+          fi
+
+  build_docker:
+    needs: docker_changes
+    if: needs.docker_changes.outputs.docker == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker Development image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile.dev
+          push: true
+          tags: ${{ needs.docker_changes.outputs.full_image_dev }}
+      
+      - name: Build and push Docker Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile.web
+          push: true
+          tags: ${{ needs.docker_changes.outputs.full_image_web }}
+
+      - name: Build and push Docker PDF image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile.report
+          push: true
+          tags: ${{ needs.docker_changes.outputs.full_image_pdf }}
+
+  build_pdf:
+    needs: [docker_changes, build_docker]
+    if: always() && (needs.build_docker.result == 'success' || needs.build_docker.result == 'skipped')
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.docker_changes.outputs.full_image_pdf }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+      
+      - name: Copy sample build.properties
+        run: |
+          cp build.properties.sample build.properties
+
+      - name: Compile PDF
+        run: |
+          make pdf

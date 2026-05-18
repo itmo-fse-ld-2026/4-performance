@@ -1,0 +1,72 @@
+\subsection{Цель \texttt{compile}}
+
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<target name="compile">
+  <echo message="Compiling the project from ${fse.compile.source}..."/>
+
+  <echo message="Source Java: ${fse.compile.jvm.source}"/>
+  <echo message="Target Java: ${fse.compile.jvm.target}"/>
+
+  <delete dir="${fse.compile.target}" />
+  <mkdir dir="${fse.compile.target}" />
+
+  <copy todir="${fse.compile.target}">
+    <fileset dir="${fse.i18n.native.dir}"/>
+  </copy>
+
+  <javac srcdir="${fse.compile.source}"
+         destdir="${fse.compile.target}"
+         source="${fse.compile.jvm.source}"
+         target="${fse.compile.jvm.target}"
+         classpathref="fse.ivy.path.compile"
+         includeantruntime="false">
+    <compilerarg value="-proc:none"/>
+  </javac>
+
+  <echo message="Done task 'compile'!" />
+</target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
+Для компиляции исходного кода проекта на Java используется задача \texttt{javac}. Она входит в состав Apache Ant API, поэтому доступна без сторонних библиотек. Компилятору в качестве параметров подаются версии исходного кода и желаемой версии выходных классов. Это нужно, чтобы переиспользовать цель в дальнейшем.
+
+Из других параметров указывается путь к внешним зависимостям проекта \texttt{classpathref} и исключаются Java-зависимости самого Apache Ant, чтобы компиляция была воспроизводимой. 
+
+Перед компиляцией проекта цель пересоздаёт директорию компиляции во избежание ошибок. Это осуществляется задачами \texttt{remove} и \texttt{mkdir}, которые также входят в состав Apache Ant API.
+
+Цель оснащена логгирующими сообщениями, которые реализованы с помощью задачи \texttt{echo} \textit{(доступна в составе Apache Ant API)}.
+
+В выводе цели возникает предупреждение о версии исходного кода Java. Оно гласит, что текущие параметры компиляции не синхронизированы с установленной версией в контейнере. Обычно это означает, что исходный код проекта старше, чем установленная версия JVM. Это никак не повлияет на работоспособность проекта благодаря обратной совместимости.  
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.compile.source = src
+fse.compile.target = build
+fse.compile.jvm.source = 17
+fse.compile.jvm.target = 17
+fse.i18n.native.dir = src/main/i18n-native
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{compile}},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+compile:
+     [echo] Compiling the project from src...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+BUILD SUCCESSFUL
+Total time: 1 second
+\end{lstlisting}

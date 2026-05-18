@@ -30,6 +30,7 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
+build-i18n/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -53,4 +54,12 @@ mvnw
 temp/
 __pycache__/
 venv/
-output/
+postgresql_db_data/
+*.compiled.*
+sandbox/
+.ant
+build.properties
+build-test/
+docs/
+*.md5
+*.sha1

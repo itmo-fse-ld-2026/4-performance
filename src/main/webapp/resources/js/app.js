@@ -23,6 +23,12 @@ const HISTORY_SCROLL_ROWS = 3;
 let drawnPoints = [];
 
 // Safe notification wrapper: use showNotification if available, otherwise create a minimal fallback
+function appMessage(key) {
+  const el = document.getElementById('app-messages');
+  if (!el) return null;
+  return el.dataset[key] || null;
+}
+
 function notify(message, type = 'error', timeout = 4000) {
   try {
     if (typeof window !== 'undefined' && typeof window.showNotification === 'function') {
@@ -291,7 +297,7 @@ function setupEventListeners() {
       const selectedRValues = getSelectedRValues();
       
       if (selectedRValues.length === 0) {
-        notify("Сначала выберите хотя бы одно значение R!", 'error');
+        notify(appMessage('selectR') || 'Select at least one R value first!', 'error');
         return;
       }
 
@@ -305,7 +311,7 @@ function setupEventListeners() {
 
       // Validate clicked coordinates are within allowed range (-6..6)
       if (x < SCALE_MIN || x > SCALE_MAX || y < SCALE_MIN || y > SCALE_MAX) {
-        notify('Координаты вне допустимого диапазона (-6..6)', 'error');
+        notify(appMessage('coordsRange') || 'Coordinates are out of range (-6..6)', 'error');
         return;
       }
 
@@ -569,7 +575,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Обработка очистки таблицы - сброс точек на графике
-  const clearButton = document.querySelector('button[value*="Очистить"], input[value*="Очистить"]');
+  const clearButton = document.querySelector('[data-action="clear-history"]');
   if (clearButton) {
     clearButton.addEventListener('click', () => {
       // После очистки таблицы сбрасываем точки на графике
@@ -788,7 +794,7 @@ function attachYButtonsValidation() {
       if (!selectedRValues || selectedRValues.length === 0) {
         e.preventDefault();
         e.stopPropagation();
-        notify('Сначала выберите хотя бы одно значение R', 'error');
+        notify(appMessage('selectR') || 'Select at least one R value first!', 'error');
         return false;
       }
 
@@ -796,7 +802,7 @@ function attachYButtonsValidation() {
       if (!xVal) {
         e.preventDefault();
         e.stopPropagation();
-        notify('Введите значение X перед отправкой', 'error');
+        notify(appMessage('enterX') || 'Enter X before submitting', 'error');
         if (xInput) xInput.classList.add('invalid');
         return false;
       }
@@ -804,7 +810,7 @@ function attachYButtonsValidation() {
       if (isNaN(x) || x < -3 || x > 5) {
         e.preventDefault();
         e.stopPropagation();
-        notify('Неверное значение X — допустимо от -3 до 5', 'error');
+        notify(appMessage('invalidX') || 'Invalid X — allowed from -3 to 5', 'error');
         if (xInput) xInput.classList.add('invalid');
         return false;
       }

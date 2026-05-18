@@ -1,0 +1,550 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant">
+  <property file="build.properties"/>
+
+  <path id="fse.ivy.path.ant">
+    <fileset dir="${fse.ant.home}/lib">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="fse.ivy.path.compile">
+    <fileset dir="${fse.ant.home}/compile">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="fse.ivy.path.test">
+    <fileset dir="${fse.ant.home}/compile">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${fse.ant.home}/test">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath refid="fse.ivy.path.ant"/>
+  </taskdef>
+
+  <target name="resolve">
+    <ivy:resolve />
+
+    <ivy:retrieve
+        conf="ant"
+        pattern="${fse.ant.home}/lib/[artifact]-[revision](-[classifier]).[ext]" />
+    <ivy:retrieve
+        conf="compile"
+        pattern="${fse.ant.home}/compile/[artifact]-[revision](-[classifier]).[ext]" />
+    <ivy:retrieve
+        conf="test"
+        pattern="${fse.ant.home}/test/[artifact]-[revision](-[classifier]).[ext]" />
+  </target>
+
+  <target name="native2ascii">
+    <echo message="Converting localization files from ${fse.i18n.native.dir} to ${fse.i18n.target.dir}..."/>
+
+    <delete dir="${fse.i18n.target.dir}" />
+    <mkdir dir="${fse.i18n.target.dir}" />
+
+    <native2ascii encoding="${fse.i18n.encoding}"
+                  src="${fse.i18n.native.dir}"
+                  dest="${fse.i18n.target.dir}"
+                  includes="${fse.i18n.includes}"
+                  ext="${fse.i18n.ext}"/>
+
+    <echo message="Done task 'native2ascii'!" />
+  </target>
+
+  <target name="compile">
+    <echo message="Compiling the project from ${fse.compile.source}..."/>
+
+    <echo message="Source Java: ${fse.compile.jvm.source}"/>
+    <echo message="Target Java: ${fse.compile.jvm.target}"/>
+
+    <delete dir="${fse.compile.target}" />
+    <mkdir dir="${fse.compile.target}" />
+
+    <copy todir="${fse.compile.target}">
+      <fileset dir="${fse.i18n.native.dir}"/>
+    </copy>
+
+    <javac srcdir="${fse.compile.source}"
+           destdir="${fse.compile.target}"
+           source="${fse.compile.jvm.source}"
+           target="${fse.compile.jvm.target}"
+           classpathref="fse.ivy.path.compile"
+           includeantruntime="false">
+      <compilerarg value="-proc:none"/>
+    </javac>
+
+    <echo message="Done task 'compile'!" />
+  </target>
+
+  <target name="build" depends="compile">
+    <echo message="Building the project..."/>
+
+    <delete dir="${fse.build.target}" />
+    <mkdir dir="${fse.build.target}" />
+    
+    <copy todir="${fse.build.target}">
+      <fileset dir="${fse.build.webapp}" />
+    </copy>
+    <copy todir="${fse.build.target}/WEB-INF/classes">
+      <fileset dir="${fse.compile.target}" />
+    </copy>
+    <copy todir="${fse.build.target}/WEB-INF/lib">
+      <fileset dir="${fse.ant.home}/lib" />
+    </copy>
+
+    <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
+         basedir="${fse.build.source}">
+      <fileset dir="${fse.build.target}" />
+      <manifest>
+        <attribute name="Main-Class" value="${fse.build.main}"/>
+        <attribute name="Specification-Title" value="${fse.build.title}"/>
+        <attribute name="Specification-Version" value="${fse.build.version}"/>
+        <attribute name="Specification-Vendor" value="${fse.build.vendor}"/>
+      </manifest>
+    </jar>
+
+    <echo message="Done task 'build'!" />
+  </target>
+
+  <target name="scp" depends="build">
+      <echo message="Copying project to the ${fse.scp.ssh.host}:${fse.scp.file.todir}..." />
+
+      <scp todir="${fse.scp.ssh.host}:${fse.scp.file.todir}"
+           port="${fse.scp.ssh.port}"
+           keyfile="/ssh/${fse.scp.ssh.key}"
+           trust="true">
+        <fileset dir="target">
+          <filename regex="${fse.scp.file.regex}"/>
+        </fileset>
+      </scp>
+  </target>
+
+  <target name="clean">
+    <echo message="Cleaning up the project artifacts..." />
+
+    <delete dir="${fse.compile.target}"/>
+    <delete dir="${fse.build.target}"/>
+    <delete dir="${fse.alt.dir}"/>
+    <delete dir="${fse.i18n.target.dir}"/>
+    <delete dir="${fse.test.target}"/>
+    <delete dir="${fse.doc.dir}/.."/>
+  </target>
+
+  <target name="music">
+    <sound>
+      <success source="${fse.ant.resources}/sounds/build_success.wav" />
+      <fail source="${fse.ant.resources}/sounds/build_fail.wav" />
+    </sound>
+    <antcall target="build" />
+  </target>
+
+  <target name="diff">
+    <echo message="Checking for changes in target classes..." />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="update"/>
+    </java>
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          outputproperty="fse.diff.out"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="status"/>
+    </java>
+
+    <loadresource property="fse.diff.commitFiles">
+      <string value="${fse.diff.out}"/>
+      <filterchain>
+        <linecontainsregexp>
+          <regexp pattern="${fse.diff.classes}"/>
+        </linecontainsregexp>
+        <tokenfilter>
+          <replaceregex pattern="^.[\s]+" replace="" flags="g"/>
+        </tokenfilter>
+        <striplinebreaks/>
+        <trim/>
+      </filterchain>
+    </loadresource>
+
+    <condition property="fse.diff.detected">
+      <matches string="${fse.diff.out}" pattern="${fse.diff.classes}"/>
+    </condition>
+
+    <antcall target="-svn-commit-if-changed"/>
+    <echo message="Done task 'diff'!" />
+  </target>
+
+  <target name="-svn-commit-if-changed" if="fse.diff.detected">
+    <echo message="Target classes modified. Committing to SVN..."/>
+
+    <tempfile property="fse.diff.targetsFile" 
+              prefix=".commit-" 
+              suffix=".txt"
+              deleteonexit="true"/>
+    
+    <echo file="${fse.diff.targetsFile}" message="${fse.diff.commitFiles}"/>
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          failonerror="true"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="commit"/>
+      <arg value="-m"/>
+      <arg value="feat: changes in tracked classes (Ant-automated)"/>
+      <arg value="--targets"/>
+      <arg value="${fse.diff.targetsFile}"/>
+    </java>
+  </target>
+
+  <target name="history">
+    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          fork="true"
+          classpathref="fse.ivy.path.ant"
+          dir="${basedir}">
+      <arg value="cleanup"/>
+    </java>
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          outputproperty="fse.diff.out"
+          failonerror="true"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="update"/>
+    </java>
+
+    <antcall target="-history-recursion-start" />
+
+    <delete file="${java.io.tmpdir}/${fse.history.broken_rev}" />
+
+    <echo message="Done task 'history'!"/>
+  </target>
+
+  <target name="-history-recursion-start">
+    <trycatch>
+      <try>
+        <antcall target="compile"/>
+        <antcall target="-history-create-log" />
+      </try>
+      <catch>
+        <property name="fse.history.hasErrors" value="true"/>
+        <antcall target="-history-check-if-last" />
+      </catch>
+    </trycatch>
+  </target>
+
+  <target name="-history-check-if-last">
+    <echo message="[ERR] Failed to compile project! Checking previous revisions..." />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          outputproperty="fse.history.headRev"
+          classpathref="fse.ivy.path.ant"
+          failonerror="true"
+          fork="true">
+      <arg value="info"/>
+      <arg value="--show-item"/>
+      <arg value="revision"/>
+    </java>
+
+    <condition property="fse.history.isNotLast">
+      <not>
+        <equals arg1="${fse.history.headRev}" arg2="${fse.history.startRev}"/>
+      </not>
+    </condition>
+
+    <antcall target="-history-revert" />
+  </target>
+
+  <target name="-history-revert" if="fse.history.isNotLast" >
+    <echo message="Found previous revision for r${fse.history.headRev}! Reverting..." />
+
+    <java classname="org.tmatesoft.svn.cli.SVN"
+          failonerror="true"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="update"/>
+      <arg value="-r"/>
+      <arg value="PREV"/>
+    </java>
+
+    <antcall target="-history-recursion-start">
+      <param name="fse.history.hasErrors" value="true"/>
+    </antcall>
+  </target>
+
+  <target name="-history-create-log" if="fse.history.hasErrors" >
+    <echo message="Found working version! Logging breaking changes..." />
+
+    <loadfile property="fse.broken.rev" srcFile="${java.io.tmpdir}/${fse.history.broken_rev}"/>
+
+    <java classname="org.tmatesoft.svn.cli.SVN" 
+          outputproperty="fse.history.workingRev"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="info"/>
+      <arg value="--show-item"/>
+      <arg value="revision"/>
+    </java>
+
+    <java classname="org.tmatesoft.svn.cli.SVN" 
+          output="${fse.history.log}"
+          classpathref="fse.ivy.path.ant"
+          fork="true">
+      <arg value="diff"/>
+      <arg value="-r"/>
+      <arg value="${fse.history.workingRev}:${fse.broken.rev}"/>
+    </java>
+  </target>
+
+  <target name="alt">
+    <delete dir="${fse.alt.dir}" failonerror="false"/>
+    <mkdir dir="${fse.alt.dir}"/>
+
+    <echo message="Creating alternative version of project..." />
+
+    <copy todir="${fse.alt.dir}">
+      <fileset dir="${fse.compile.source}"/>
+    </copy>
+
+    <for list="${fse.alt.pairs}" param="pair" delimiter=",">
+      <sequential>
+        <local name="from"/>
+        <local name="to"/>
+
+        <propertyregex property="from"
+                       input="@{pair}"
+                       regexp="^(.+):"
+                       select="\1" />
+        <propertyregex property="to"
+                       input="@{pair}"
+                       regexp=":(.+)$"
+                       select="\1" />
+        <replaceregexp match="${from}" replace="${to}" flags="g" byline="true">
+          <fileset dir="${fse.alt.dir}">
+            <filename regex="${fse.alt.files}"/>
+          </fileset>
+        </replaceregexp>
+      </sequential>
+    </for>
+
+    <for list="${fse.alt.pairs}" param="pair" delimiter=",">
+      <sequential>
+        <local name="from"/>
+        <local name="to"/>
+
+        <propertyregex property="from"
+                       input="@{pair}"
+                       regexp="^(.+):"
+                       select="\1" />
+        <propertyregex property="to"
+                       input="@{pair}"
+                       regexp=":(.+)$"
+                       select="\1" />
+        
+        <move todir="${fse.alt.dir}">
+          <fileset dir="${fse.alt.dir}">
+            <include name="**/*"/>
+          </fileset>
+          <mapper type="regexp" from="^(.*)${from}(.*)$" to="\1${to}\2"/>
+        </move>
+      </sequential>
+    </for>
+
+    <antcall target="build">
+      <param name="fse.compile.source" value="${fse.alt.dir}" />
+
+      <param name="fse.build.version" value="${fse.build.version}-alt" />
+    </antcall>
+  </target>
+
+  <target name="env">
+    <echo message="Building project for specified Java environment..." />
+
+    <antcall target="build">
+      <param name="fse.compile.jvm.source" value="${fse.env.jvm.source}" />
+      <param name="fse.compile.jvm.target" value="${fse.env.jvm.target}" />
+
+      <param name="fse.build.version" value="${fse.build.version}-env" />
+    </antcall>
+    
+    <echo message="JVM Arguments: ${fse.env.jvm.args}" />
+
+    <exec executable="make">
+      <env key="POSTGRES_HOST" value="${fse.env.postgres.host}"/>
+      <env key="POSTGRES_DB" value="${fse.env.postgres.db}"/>
+      <env key="POSTGRES_PORT" value="${fse.env.postgres.port}"/>
+      <env key="POSTGRES_USER" value="${fse.env.postgres.user}"/>
+      <env key="POSTGRES_PASSWORD" value="${fse.env.postgres.password}"/>
+      <env key="VERSION_TAG" value="${fse.env.docker.tag}"/>
+      <env key="JAVA_OPTS" value="${fse.env.jvm.args}"/>
+      <env key="JAVA_HOME" value="${fse.env.jvm.home}"/>
+
+      <arg value="run"/>
+    </exec>
+  </target>
+
+    <target name="compile-tests">
+        <echo message="Compiling JUnit tests..."/>
+
+        <delete dir="${fse.test.target}" />
+        <mkdir dir="${fse.test.target}"/>
+
+        <javac srcdir="${fse.test.source}"
+               destdir="${fse.test.target}"
+               source="${fse.compile.jvm.source}"
+               target="${fse.compile.jvm.target}"
+               includeantruntime="false">
+            <classpath>
+                <path refid="fse.ivy.path.test"/>
+                <pathelement location="${fse.compile.target}"/>
+            </classpath>
+        </javac>
+
+        <echo message="Done task 'compile-tests'!" />
+    </target>
+
+    <target name="test" depends="build">
+        <echo message="Running JUnit tests..."/>
+
+        <antcall target="compile-tests" />
+
+        <condition property="junit.reports.arg" value="--reports-dir=${fse.test.target}/${fse.test.reports.subdir}" else="">
+            <isset property="fse.test.report.output"/> 
+        </condition>
+
+        <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
+            <jvmarg value="-Xshare:off"/>
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+                <path refid="fse.ivy.path.test"/>
+                <pathelement location="${fse.compile.target}"/>
+                <pathelement location="${fse.test.target}"/>
+            </classpath>
+            <arg value="execute"/>
+            <arg value="--scan-classpath"/>
+            <arg value="--details=verbose"/>
+            <arg line="${junit.reports.arg}"/>
+        </java>
+
+        <echo message="Done task 'test'!" />
+    </target>
+
+    <target name="xml">
+        <echo message="Validating XML and XHTML files in the project..."/>
+
+        <xmlvalidate lenient="true" failonerror="false">
+            <fileset dir="."
+                     includes="${fse.xml.includes}"
+                     excludes="${fse.xml.excludes}"/>
+        </xmlvalidate>
+
+        <echo message="Done task 'xml'!" />
+    </target>
+
+    <target name="doc" depends="build">
+        <echo message="Generating JavaDoc documentation..."/>
+
+        <mkdir dir="${fse.doc.dir}"/>
+        <javadoc sourcepath="${fse.compile.source}"
+                 destdir="${fse.doc.dir}"
+                 source="${fse.compile.jvm.source}"
+                 windowtitle="${fse.doc.windowtitle}"
+                 header="${fse.doc.header}"
+                 encoding="${fse.doc.encoding}"
+                 charset="${fse.doc.encoding}"
+                 docencoding="${fse.doc.encoding}"
+                 failonerror="false"
+                 access="private">
+            <packageset dir="${fse.compile.source}" defaultexcludes="yes">
+                <include name="weblab/**"/>
+            </packageset>
+            <classpath>
+                <path refid="fse.ivy.path.compile"/>
+            </classpath>
+        </javadoc>
+
+        <copy todir="${fse.build.target}/docs/javadoc">
+            <fileset dir="${fse.doc.dir}"/>
+        </copy>
+
+        <checksum algorithm="MD5" totalproperty="project.md5.hash" todir="${fse.build.target}">
+            <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
+        </checksum>
+
+        <checksum algorithm="SHA-1" totalproperty="project.sha1.hash" todir="${fse.build.target}">
+            <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
+        </checksum>
+
+        <copy todir="${fse.build.target}/docs/javadoc">
+            <fileset dir="${fse.doc.dir}"/>
+        </copy>
+
+        <tstamp/>
+
+        <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
+            update="true"
+            basedir="${fse.build.target}"
+            includes="docs/**">
+            <manifest>
+                <attribute name="Documentation" value="JavaDoc included in docs/javadoc"/>
+                <attribute name="Doc-Generated" value="${TODAY}"/>
+                <attribute name="Doc-Encoding" value="${fse.doc.encoding}"/>
+                <attribute name="Project-MD5-Checksum" value="${project.md5.hash}"/>
+                <attribute name="Project-SHA1-Checksum" value="${project.sha1.hash}"/>
+            </manifest>
+        </jar>
+
+        <echo message="Done task 'doc'!" />
+    </target>
+
+    <target name="report">
+        <antcall target="test">
+          <param name="fse.test.report.output" value="true" />
+        </antcall>
+
+        <echo message="Saving test reports to SVN..."/>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+          <arg value="update"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="add"/>
+            <arg value="--depth"/>
+            <arg value="empty"/>
+            <arg value="--force"/>
+            <arg value="${fse.test.target}"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="add"/>
+            <arg value="--force"/>
+            <arg value="${fse.test.target}/${fse.test.reports.subdir}"/>
+        </java>
+
+        <java classname="org.tmatesoft.svn.cli.SVN"
+              failonerror="true"
+              classpathref="fse.ivy.path.ant"
+              fork="true">
+            <arg value="commit"/>
+            <arg value="-m"/>
+            <arg value="feat: add test reports (Ant-automated)"/>
+        </java>
+
+        <echo message="Done task 'report'!" />
+    </target>
+</project>

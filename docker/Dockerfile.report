@@ -1,7 +1,7 @@
 # =============================================================================
-# Custom XeLaTeX Environment for Version Control Systems Lab Documentation
+# Custom XeLaTeX Environment for FSE Lab #3
 # Base: ghcr.io/mrdvd/xetex-base (Ubuntu-based)
-# Purpose: Compiling reports on SVN/Git configuration and conflict resolution
+# Purpose: Compiling reports for Lab #3: Apache Ant Build Automation
 # =============================================================================
 
 FROM ghcr.io/mrdvd/xetex-base:2026
@@ -19,5 +19,8 @@ RUN \
     babel-russian \
     hyphen-russian \
     hyperref \
-    titlesec && \
+    titlesec \
+    etoolbox \
+    listings \
+    xcolor && \
   apt-get clean

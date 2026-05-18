@@ -1,0 +1,25 @@
+# =============================================================================
+# WildFly with PostgreSQL JDBC Driver for Web Application
+# Base: quay.io/wildfly/wildfly:28.0.0.Final-jdk20
+# =============================================================================
+
+FROM quay.io/wildfly/wildfly:28.0.0.Final-jdk20
+
+RUN mkdir -p /opt/jboss/wildfly/modules/system/layers/base/org/postgresql/main
+
+RUN curl -L https://jdbc.postgresql.org/download/postgresql-42.7.10.jar \
+    -o /opt/jboss/wildfly/modules/system/layers/base/org/postgresql/main/postgresql.jar
+
+RUN echo '<?xml version="1.0" encoding="UTF-8"?> \
+<module xmlns="urn:jboss:module:1.9" name="org.postgresql"> \
+  <resources> \
+    <resource-root path="postgresql.jar"/> \
+  </resources> \
+  <dependencies> \
+    <module name="javax.api"/> \
+    <module name="jakarta.transaction.api"/> \
+  </dependencies> \
+</module>' \
+> /opt/jboss/wildfly/modules/system/layers/base/org/postgresql/main/module.xml
+
+CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]

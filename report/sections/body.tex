@@ -1,3 +1,128 @@
 \section{Выполнение работы}
 
-\dots
+\subsection{Конфигурация Apache Ivy}
+
+В нашей работе для сборки проекта используется Apache Ant в связке с менеджером зависимостей Apache Ivy. Ниже приведён конфигурационный файл.
+
+\begin{lstlisting}[caption={Файл \texttt{ivy.xml}},captionpos=b]
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+  <info organisation="weblab" module="web3"/>
+
+  <configurations>
+    <conf name="compile" description="Dependencies for javac"/>
+    <conf name="ant" description="Dependencies for Ant tasks"/>
+    <conf name="test" description="Dependencies for tests"/>
+  </configurations>
+
+  <dependencies>
+    <!-- for svn goals -->
+    <dependency org="org.tmatesoft.svnkit" name="svnkit" rev="1.10.11" conf="ant->default" />
+    <dependency org="org.tmatesoft.svnkit" name="svnkit-cli" rev="1.10.11" conf="ant->default" />
+    <!-- for trycatch -->
+    <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="ant->default" >
+      <!-- excluding for resolving version conflicts -->
+      <exclude org="ant" name="ant" />
+    </dependency>
+    <!-- for scp goal -->
+    <dependency org="com.github.mwiede" name="jsch" rev="2.28.2" conf="ant->default" />
+    <!-- for test goals -->
+    <dependency org="org.junit.jupiter" name="junit-jupiter" rev="5.10.2" conf="test->default" />
+    <dependency org="org.junit.platform" name="junit-platform-console" rev="1.10.2" conf="test->default" />
+    <dependency org="org.mockito" name="mockito-core" rev="5.11.0" conf="test->default" />
+    <dependency org="org.mockito" name="mockito-junit-jupiter" rev="5.11.0" conf="test->default" />
+
+    <!-- project dependencies -->
+    <dependency org="jakarta.faces" name="jakarta.faces-api" rev="4.0.1" conf="compile->default" />
+    <dependency org="org.primefaces" name="primefaces" rev="12.0.0" e:classifier="jakarta" conf="compile->default" />
+    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" conf="compile->default" />
+    <dependency org="org.postgresql" name="postgresql" rev="42.7.3" conf="compile->default" />
+    <dependency org="jakarta.servlet" name="jakarta.servlet-api" rev="6.0.0" conf="compile->default" />
+    <dependency org="jakarta.enterprise" name="jakarta.enterprise.cdi-api" rev="4.0.1" conf="compile->default" />
+    <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.17.1" conf="compile->default" />
+    <dependency org="com.fasterxml.jackson.datatype" name="jackson-datatype-jsr310" rev="2.17.1" conf="compile->default" />
+    <dependency org="io.vavr" name="vavr" rev="0.10.4" conf="compile->default" />
+  </dependencies>
+</ivy-module>
+\end{lstlisting}
+
+Здесь зависимости поделены между тремя конфигурациями:
+\begin{itemize}
+  \item зависимости целей Apache Ant (\texttt{ant});
+  \item зависимости проекта (\texttt{compile});
+  \item зависимости тестов проекта.
+\end{itemize}
+
+Чтобы разрешить все группы, воспользуемся репозиториями Maven.
+\begin{lstlisting}[caption={Файл \texttt{ivysettings.xml}},captionpos=b]
+<ivysettings>
+  <caches defaultCacheDir="${fse.ant.home}/.ivy2/cache" />
+  <settings defaultResolver="my-chain"/>
+  <resolvers>
+    <chain name="my-chain">
+      <filesystem name="local" />
+      <ibiblio name="central" 
+               root="https://repo1.maven.org/maven2/" 
+               m2compatible="true"/>
+    </chain>
+  </resolvers>
+</ivysettings>
+\end{lstlisting}
+
+Напишем дополнительную цель \texttt{resolve}, которая разрешает все зависимости. Её необходимо применить до запуска других целей Apache Ant.
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<path id="fse.ivy.path.ant">
+  <fileset dir="${fse.ant.home}/lib">
+    <include name="*.jar"/>
+  </fileset>
+</path>
+
+<path id="fse.ivy.path.compile">
+  <fileset dir="${fse.ant.home}/compile">
+    <include name="*.jar"/>
+  </fileset>
+</path>
+
+<path id="fse.ivy.path.test">
+  <fileset dir="${fse.ant.home}/compile">
+    <include name="*.jar"/>
+  </fileset>
+  <fileset dir="${fse.ant.home}/test">
+    <include name="*.jar"/>
+  </fileset>
+</path>
+
+<taskdef resource="net/sf/antcontrib/antlib.xml">
+  <classpath refid="fse.ivy.path.ant"/>
+</taskdef>
+
+<target name="resolve">
+  <ivy:resolve />
+
+  <ivy:retrieve
+      conf="ant"
+      pattern="${fse.ant.home}/lib/[artifact]-[revision](-[classifier]).[ext]" />
+  <ivy:retrieve
+      conf="compile"
+      pattern="${fse.ant.home}/compile/[artifact]-[revision](-[classifier]).[ext]" />
+  <ivy:retrieve
+      conf="test"
+      pattern="${fse.ant.home}/test/[artifact]-[revision](-[classifier]).[ext]" />
+</target>
+\end{lstlisting}
+
+Задача \texttt{ivy:resolve} кеширует зависимости с внешних репозиториев, а другая --- \texttt{ivy:retrieve} --- распределяет их по необходимым директориям.
+
+\input{goals/Compile}
+\input{goals/Build}
+\input{goals/Clean}
+\input{goals/Test}
+\input{goals/Native2ascii}
+\input{goals/Doc}
+\input{goals/Xml}
+\input{goals/Scp}
+\input{goals/Music}
+\input{goals/Diff}
+\input{goals/History}
+\input{goals/Alt}
+\input{goals/Report}
+\input{goals/Env}
