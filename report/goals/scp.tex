@@ -1,0 +1,71 @@
+\subsection{Цель \texttt{scp}}
+
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<target name="scp" depends="build">
+  <echo message="Copying project to the ${fse.scp.ssh.host}:${fse.scp.file.todir}..." />
+
+  <scp todir="${fse.scp.ssh.host}:${fse.scp.file.todir}"
+       port="${fse.scp.ssh.port}"
+       keyfile="/ssh/${fse.scp.ssh.key}"
+       trust="true">
+    <fileset dir="target">
+      <filename regex="${fse.scp.file.regex}"/>
+    </fileset>
+  </scp>
+</target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
+Для копирования проекта на факультетский сервер \textit{Helios} используется задача \texttt{scp}. Хотя она и входит в состав Apache Ant API, но она обладает внешними зависимостями. Поэтому в конфигурацию Apache Ivy была добавлена библиотека \textit{Java Secure Channel (JSch)}. Она необходима для работы по протоколу \texttt{ssh}. Здесь стоит уточнить, что используется \href{https://github.com/mwiede/jsch}{fork-версия библиотеки}. Она поддерживает форматы ключей, которые принимаются на стороне \textit{Helios}.  
+
+Набор копируемых файлов проекта определяется при помощи regex-выражения, который указан в файле параметров. Это реализуется типом \texttt{fileset} с \texttt{filename} \textit{(доступны в составе Apache Ant API)}.
+
+Цели необходим собранный проект, поэтому она зависит от другой цели \texttt{build}. Также она оснащена логгирующим сообщением, которое реализовано с помощью задачи \texttt{echo} \textit{(доступна в составе Apache Ant API)}.
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.scp.file.regex = .*(war).*
+fse.scp.file.todir = ~
+fse.scp.ssh.host = s466449@cs.ifmo.ru
+fse.scp.ssh.port = 2222
+fse.scp.ssh.key = .ssh/key
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{scp}},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+compile:
+     [echo] Compiling the project from src...
+     [echo] Source Java: 17
+     [echo] Target Java: 17
+   [delete] Deleting directory /project/build
+    [mkdir] Created dir: /project/build
+    [javac] Compiling 22 source files to /project/build
+    [javac] warning: [options] system modules path not set in conjunction with -source 17
+    [javac] 1 warning
+     [echo] Done task 'compile'!
+
+build:
+     [echo] Building the project...
+   [delete] Deleting directory /project/target
+    [mkdir] Created dir: /project/target
+     [copy] Copying 8 files to /project/target
+     [copy] Copying 22 files to /project/target/WEB-INF/classes
+     [copy] Copying 32 files to /project/target/WEB-INF/lib
+      [jar] Building jar: /project/target/web3-1.0.0.war
+     [echo] Done task 'build'!
+
+scp:
+     [echo] Copying project to the s466449@cs.ifmo.ru:~...
+      [scp] Connecting to cs.ifmo.ru:2222
+      [scp] done.
+
+BUILD SUCCESSFUL
+Total time: 7 seconds
+\end{lstlisting}

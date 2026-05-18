@@ -1,0 +1,41 @@
+\subsection{Цель \texttt{clean}}
+
+\subsubsection{Листинг}
+
+\begin{lstlisting}[caption={Часть содержимого файла \texttt{build.xml}},captionpos=b]
+<target name="clean">
+  <echo message="Cleaning up the project artifacts..." />
+
+  <delete dir="${fse.compile.target}"/>
+  <delete dir="${fse.build.target}"/>
+  <delete dir="${fse.alt.dir}"/>
+</target>
+\end{lstlisting}
+
+\subsubsection{Комментарии}
+
+Цель удаляет директории, которые содержат результаты компиляции и сборки Java-проекта. Для этого используется задача \texttt{delete}, которая входит в состав Apache Ant API.
+
+Цель оснащена логгирующим сообщением, которое реализовано с помощью задачи \texttt{echo} \textit{(доступна в составе Apache Ant API)}.
+
+\subsubsection{Значения используемых параметров}
+
+\begin{lstlisting}[language=Properties,caption={Часть содержимого файла \texttt{build.properties}},captionpos=b]
+fse.compile.target = build
+fse.build.target = target
+fse.alt.dir = alt-version
+\end{lstlisting}
+
+\subsubsection{Лог}
+
+\begin{lstlisting}[caption={Лог цели \texttt{clean}},language={},captionpos=b]
+Buildfile: /project/build.xml
+
+clean:
+     [echo] Cleaning up the project artifacts...
+   [delete] Deleting directory /project/build
+   [delete] Deleting directory /project/target
+
+BUILD SUCCESSFUL
+Total time: 0 seconds
+\end{lstlisting}
