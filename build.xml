@@ -132,9 +132,6 @@
     <delete dir="${fse.i18n.target.dir}"/>
     <delete dir="${fse.test.target}"/>
     <delete dir="${fse.doc.dir}/.."/>
-    <delete>
-        <fileset dir="${fse.compile.source}" includes="**/*.md5,**/*.sha1"/>
-    </delete>
   </target>
 
   <target name="music">
@@ -468,11 +465,15 @@
             </classpath>
         </javadoc>
 
-        <checksum algorithm="MD5" fileext=".md5">
+        <copy todir="${fse.build.target}/docs/javadoc">
+            <fileset dir="${fse.doc.dir}"/>
+        </copy>
+
+        <checksum algorithm="MD5" totalproperty="project.md5.hash">
             <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
         </checksum>
 
-        <checksum algorithm="SHA-1" fileext=".sha1">
+        <checksum algorithm="SHA-1" totalproperty="project.sha1.hash">
             <fileset dir="${fse.compile.source}" includes="**/*.java" excludes="test/**"/>
         </checksum>
 
@@ -480,19 +481,18 @@
             <fileset dir="${fse.doc.dir}"/>
         </copy>
 
-        <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
-             update="true"
-             basedir="${fse.build.target}"
-             includes="docs/**"/>
+        <tstamp/>
 
         <jar destfile="${fse.build.target}/${fse.build.name}-${fse.build.version}.war"
-             update="true">
+            update="true"
+            basedir="${fse.build.target}"
+            includes="docs/**">
             <manifest>
                 <attribute name="Documentation" value="JavaDoc included in docs/javadoc"/>
                 <attribute name="Doc-Generated" value="${TODAY}"/>
                 <attribute name="Doc-Encoding" value="${fse.doc.encoding}"/>
-                <attribute name="MD5-Checksums" value="Generated for all Java files"/>
-                <attribute name="SHA1-Checksums" value="Generated for all Java files"/>
+                <attribute name="Project-MD5-Checksum" value="${project.md5.hash}"/>
+                <attribute name="Project-SHA1-Checksum" value="${project.sha1.hash}"/>
             </manifest>
         </jar>
 
