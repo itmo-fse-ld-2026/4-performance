@@ -450,7 +450,7 @@
         <echo message="Generating JavaDoc documentation..."/>
 
         <mkdir dir="${fse.doc.dir}"/>
-        <javadoc sourcepath="${fse.compile.source}/main/java"
+        <javadoc sourcepath="${fse.compile.source}"
                  destdir="${fse.doc.dir}"
                  source="${fse.compile.jvm.source}"
                  windowtitle="${fse.doc.windowtitle}"
@@ -460,7 +460,7 @@
                  docencoding="${fse.doc.encoding}"
                  failonerror="false"
                  access="private">
-            <packageset dir="${fse.compile.source}/main/java" defaultexcludes="yes">
+            <packageset dir="${fse.compile.source}" defaultexcludes="yes">
                 <include name="weblab/**"/>
             </packageset>
             <classpath>
