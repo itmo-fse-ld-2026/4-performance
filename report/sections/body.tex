@@ -11,6 +11,7 @@
   <configurations>
     <conf name="compile" description="Dependencies for javac"/>
     <conf name="ant" description="Dependencies for Ant tasks"/>
+    <conf name="test" description="Dependencies for tests"/>
   </configurations>
 
   <dependencies>
@@ -24,6 +25,11 @@
     </dependency>
     <!-- for scp goal -->
     <dependency org="com.github.mwiede" name="jsch" rev="2.28.2" conf="ant->default" />
+    <!-- for test goals -->
+    <dependency org="org.junit.jupiter" name="junit-jupiter" rev="5.10.2" conf="test->default" />
+    <dependency org="org.junit.platform" name="junit-platform-console" rev="1.10.2" conf="test->default" />
+    <dependency org="org.mockito" name="mockito-core" rev="5.11.0" conf="test->default" />
+    <dependency org="org.mockito" name="mockito-junit-jupiter" rev="5.11.0" conf="test->default" />
 
     <!-- project dependencies -->
     <dependency org="jakarta.faces" name="jakarta.faces-api" rev="4.0.1" conf="compile->default" />
@@ -39,13 +45,14 @@
 </ivy-module>
 \end{lstlisting}
 
-Здесь зависимости поделены между двумя конфигурациями:
+Здесь зависимости поделены между тремя конфигурациями:
 \begin{itemize}
   \item зависимости целей Apache Ant (\texttt{ant});
-  \item зависимости проекта (\texttt{compile}).
+  \item зависимости проекта (\texttt{compile});
+  \item зависимости тестов проекта.
 \end{itemize}
 
-Чтобы разрешить обе группы, воспользуемся репозиториями Maven.
+Чтобы разрешить все группы, воспользуемся репозиториями Maven.
 \begin{lstlisting}[caption={Файл \texttt{ivysettings.xml}},captionpos=b]
 <ivysettings>
   <caches defaultCacheDir="${fse.ant.home}/.ivy2/cache" />
@@ -75,6 +82,15 @@
   </fileset>
 </path>
 
+<path id="fse.ivy.path.test">
+  <fileset dir="${fse.ant.home}/compile">
+    <include name="*.jar"/>
+  </fileset>
+  <fileset dir="${fse.ant.home}/test">
+    <include name="*.jar"/>
+  </fileset>
+</path>
+
 <taskdef resource="net/sf/antcontrib/antlib.xml">
   <classpath refid="fse.ivy.path.ant"/>
 </taskdef>
@@ -88,6 +104,9 @@
   <ivy:retrieve
       conf="compile"
       pattern="${fse.ant.home}/compile/[artifact]-[revision](-[classifier]).[ext]" />
+  <ivy:retrieve
+      conf="test"
+      pattern="${fse.ant.home}/test/[artifact]-[revision](-[classifier]).[ext]" />
 </target>
 \end{lstlisting}
 
