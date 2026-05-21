@@ -4,5 +4,5 @@ docker run --rm \
   -v .:/project \
   -v .ant:/.ant \
   -v ../remote:/project/sandbox/remote \
-  ghcr.io/itmo-fse-ld-2026/3-ant-environment:$1 \
+  ghcr.io/itmo-fse-ld-2026/4-ant-environment:$1 \
   ant $2

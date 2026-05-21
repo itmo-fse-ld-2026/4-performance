@@ -8,5 +8,5 @@ docker run --rm \
   -v ../remote:/project/sandbox/remote \
   -v ~/.ssh/helios_ant_key:/ssh/.ssh/key \
   --device /dev/snd \
-  ghcr.io/itmo-fse-ld-2026/3-ant-environment:$1 \
+  ghcr.io/itmo-fse-ld-2026/4-ant-environment:$1 \
   ant $2

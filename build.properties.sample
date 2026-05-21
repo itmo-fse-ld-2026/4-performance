@@ -4,18 +4,10 @@ fse.pdf.report_name = main
 fse.ant.home = /.ant
 fse.ant.resources = src/main/resources/ant
 
-fse.svn.sandbox.dir = sandbox
-fse.svn.sandbox.remote = remote
-fse.svn.sandbox.local = local
-
 fse.compile.source = src/main/java
 fse.compile.target = build
 
 fse.i18n.native.dir = src/main/i18n-native
-fse.i18n.target.dir = build-i18n
-fse.i18n.includes = weblab/messages*.properties
-fse.i18n.encoding = UTF-8
-fse.i18n.ext = .properties
 fse.compile.jvm.source = 17
 fse.compile.jvm.target = 17
 
@@ -27,21 +19,6 @@ fse.build.version = 1.0.0
 fse.build.title = FSE Lab #3
 fse.build.vendor = ITMO FSE LD 2026
 fse.build.webapp = src/main/webapp
-
-fse.scp.file.regex = .*(war).*
-fse.scp.file.todir = ~
-fse.scp.ssh.host = s466449@cs.ifmo.ru
-fse.scp.ssh.port = 2222
-fse.scp.ssh.key = .ssh/key
-
-fse.diff.classes = .*(models|ResultDAO\\.java).*
-fse.history.log = breaking_changes.log
-fse.history.broken_rev = .broken_rev.flag
-fse.history.startRev = 2
-
-fse.alt.dir = alt-version
-fse.alt.files = .*(ResultDAO\.java|QuadrantShapeTemplate|).*
-fse.alt.pairs = ResultDAO:AltResultYayDAO,QuadrantShapeTemplate:QuadrantApeTemplate
 
 fse.env.jvm.source = 19
 fse.env.jvm.target = 19
@@ -58,14 +35,3 @@ fse.env.docker.tag = pr-2
 fse.test.source = src/test/java
 fse.test.target = build-test
 fse.test.reports.subdir = reports
-
-fse.xml.includes = **/*.xml,**/*.xhtml
-fse.xml.excludes = build-test/**,build/**,target/**,alt-version/**,.ant/**,sandbox/**
-fse.xml.root.includes = *.xml
-
-fse.doc.dir = docs/javadoc
-fse.doc.windowtitle = ${fse.build.title} API Documentation
-fse.doc.header = ${fse.build.title}
-fse.doc.footer = ${fse.build.vendor}
-fse.doc.encoding = UTF-8
-fse.doc.keys = **/*.md5, **/*.sha1
