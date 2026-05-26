@@ -1,16 +1,10 @@
 include build.properties
 
-ignored_files=$$( \
-	echo .git; \
-	echo .github; \
-	git check-ignore -- * \
-)
-
 ant_home = $(sandbox_local)$(fse.ant.home)
 
 clean:
 	# clean LaTeX artifacts
-	@for file_ext in "*.pdf" "*.aux" "*.log" "*.toc" "*.out"; do \
+	@for file_ext in "*.pdf" "*.aux" "*.log" "*.toc" "*.out" "*.blg" "*.run.xml" "*.bcf" "*.bbl"; do \
 		find $(fse.pdf.report_dir) -name "$${file_ext}" -delete; \
 	done
 	# clean other artifacts
@@ -23,4 +17,5 @@ down:
 pdf:
 	cd "${fse.pdf.report_dir}"; \
 	xelatex --shell-escape -interaction=nonstopmode "${fse.pdf.report_name}"; \
+	biber "${fse.pdf.report_name}"; \
 	xelatex --shell-escape -interaction=nonstopmode "${fse.pdf.report_name}"
