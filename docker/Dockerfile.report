@@ -22,5 +22,8 @@ RUN \
     titlesec \
     etoolbox \
     listings \
-    xcolor && \
+    xcolor \
+    biblatex \
+    biber \
+    biblatex-gost && \
   apt-get clean
