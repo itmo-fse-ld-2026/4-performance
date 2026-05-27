@@ -1,12 +1,11 @@
-AUDIO_GID=$(getent group audio | cut -d: -f3)
+mkdir -p ./.ant/lib
+docker create --name temp_ant ghcr.io/itmo-fse-ld-2026/4-ant-environment:$1
+docker cp temp_ant:/ant/lib ./.ant
+docker rm temp_ant
 
 docker run --rm \
   --user "$(id -u):0" \
-  --group-add "$AUDIO_GID" \
   -v .:/project \
   -v .ant:/.ant \
-  -v ../remote:/project/sandbox/remote \
-  -v ~/.ssh/helios_ant_key:/ssh/.ssh/key \
-  --device /dev/snd \
   ghcr.io/itmo-fse-ld-2026/4-ant-environment:$1 \
   ant $2

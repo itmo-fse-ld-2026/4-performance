@@ -22,4 +22,4 @@ RUN echo '<?xml version="1.0" encoding="UTF-8"?> \
 </module>' \
 > /opt/jboss/wildfly/modules/system/layers/base/org/postgresql/main/module.xml
 
-CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
+CMD ["/opt/jboss/wildfly/bin/standalone.sh"]

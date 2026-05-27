@@ -7,6 +7,7 @@ ignored_files=$$( \
 )
 
 ant_home = $(sandbox_local)$(fse.ant.home)
+image_web = $$(cat docker/IMAGE_WEB)
 
 clean:
 	# clean LaTeX artifacts
@@ -17,7 +18,7 @@ clean:
 	find . -name "*.compiled.*" -delete
 run: clean
 	python src/main/python/main.py
-	docker compose --file docker/compose.yml --project-directory . up
+	IMAGE_WEB=$(image_web) docker compose --file docker/compose.yml --project-directory . up
 down:
 	docker compose --file docker/compose.yml --project-directory . down
 pdf:
