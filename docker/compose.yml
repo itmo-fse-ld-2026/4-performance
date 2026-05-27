@@ -37,7 +37,6 @@ services:
     ports:
       - "8080:8080"
       - "9990:9990"
-      - "9010:9010"
     command: ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
     depends_on:
       database:
