@@ -25,5 +25,7 @@ RUN \
     xcolor \
     biblatex \
     biber \
-    biblatex-gost && \
+    biblatex-gost \
+    float \
+    listings && \
   apt-get clean
