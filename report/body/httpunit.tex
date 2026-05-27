@@ -13,11 +13,11 @@
 
 Подробнее с проектом можно ознакомиться на внешнем ресурсе\cite{httpunit_website}.
 
-\subsubsection{Узкие места в потоке \texttt{main}}
+\subsubsection{Узкое место в потоке \texttt{main}}
 
 \subsubsubsection{Описание проблемы}
 
-В процессе выполнения сценария в главном потоке наблюдается задержки, которые приводят к деградации времени обработки запросов.
+В процессе выполнения сценария в главном потоке наблюдаются задержки, которые приводят к деградации времени обработки запросов.
 
 \subsubsubsection{Алгоритм локализации проблемы}
 
@@ -43,11 +43,31 @@
 
   \item Изучаем исходный код метода \texttt{main}, чтобы найти вызов метода \texttt{sleep} и~определить целесообразность его применения.
 
-  \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\textwidth]{screenshots/main-3.png}
-    \caption{Просмотр исходного кода метода \texttt{main}.}
-  \end{figure}
+  \begin{lstlisting}[caption=Листинг метода \texttt{main} из класса \texttt{Main}.]
+public static void main(String[] args) {
+    try {
+        HttpUnitOptions.setExceptionsThrownOnScriptError(false);
+        ServletRunner sr = new ServletRunner();
+        sr.registerServlet("myServlet", HelloWorld.class.getName());
+        ServletUnitClient sc = sr.newClient();
+        int number = 1;
+        WebRequest request = new GetMethodWebRequest("http://test.meterware.com/myServlet");
+        while (true) {
+            WebResponse response = sc.getResponse(request);
+            System.out.println("Count: " + number++ + response);
+            java.lang.Thread.sleep(200); // it's here!
+        }
+    } catch (InterruptedException ex) {
+        Logger.getLogger("global").log(Level.SEVERE, null, ex);
+    } catch (MalformedURLException ex) {
+        Logger.getLogger("global").log(Level.SEVERE, null, ex);
+    } catch (IOException ex) {
+        Logger.getLogger("global").log(Level.SEVERE, null, ex);
+    } catch (SAXException ex) {
+        Logger.getLogger("global").log(Level.SEVERE, null, ex);
+    }
+}
+\end{lstlisting}
 \end{enumerate}
 
 \subsubsubsection{Пути устранения проблемы}
@@ -72,50 +92,108 @@
   \caption{Нормальный ход обновлённой программы.}
 \end{figure}
 
-Так как обнаруженное узкое место является намеренным архитектурным ограничением для отладки, а нестабильность при его удалении вызвана исключительно ограничениями самого инструмента профилирования, принято решение оставить текущую реализацию без изменений и перейти к анализу других компонентов системы.
+Так как обнаруженное узкое место является намеренным архитектурным ограничением для отладки, а нестабильность при его удалении вызвана исключительно ограничениями самого инструмента профилирования, принято решение оставить текущую реализацию без изменений при работе с данным профилировщиком.
 
 \subsubsection{Избыточная активность сборщика мусора}
 
 \subsubsubsection{Описание проблемы}
 
-Наблюдается высокая частота вызова GC, что снижает общую пропускную способность системы из-за постоянного выделения краткоживущих объектов.
+Наблюдается высокая частота вызова GC из-за накопления неиспользуемых элементов. Это снижает общую пропускную способность системы и впоследствии приводит к падению программы из-за переполнения памяти.
 
 \subsubsubsection{Алгоритм локализации проблемы}
 
 \begin{enumerate}
-    \item Подключение вкладки \texttt{VisualGC} в VisualVM или мониторинг памяти в IDE.
-    \item Фиксация пилообразного графика памяти в области Eden и частоты операций сборки.
-    \item Использование режима "Memory Profiling" для определения классов, создающих наибольшую нагрузку на кучу (Heap Allocation Rate).
-\end{enumerate}
-
-\begin{figure}[htbp]
+  \item Временное отключение задержки между итерациями в главном цикле приложения для ускорения воспроизведения потенциальной утечки памяти в другом инструменте, отличном от профилировщика NetBeans.
+  \item Запускаем VisualVM и подключаемся к JVM-процессу исследуемой программы.
+  \begin{figure}[H]
     \centering
-    \caption{Динамика заполнения памяти и частота срабатывания GC.}
-\end{figure}
+    \includegraphics[width=0.7\textwidth]{screenshots/gc-1.png}
+    \caption{Подключение к исследуемому процессу в VisualVM.}
+  \end{figure}
+  \item Мониторим состояние системы в течение времени и наблюдаем просадку производительности приложения вместе с высоким процентом времени CPU, которое тратится на сборку мусора.
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{screenshots/gc-fail.png}
+    \caption{Фиксация высокой нагрузки на GC}
+  \end{figure}
+  \item Спустя некоторое время обнаруживаем падение программы из-за исчерпания доступного пространства в куче:
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{screenshots/gc-with-1-lat.png}
+    \caption{Аварийное завершение программы с ошибкой \texttt{OutOfMemoryError}.}
+  \end{figure}
+  \item Снимаем дамп памяти незадолго до критического сбоя и переключаем интерфейс профайлера в режим детального анализа объектов.
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{screenshots/gc-3.png}
+    \caption{Анализ полученного дампа кучи.}
+  \end{figure}
+  \item Включаем агрегацию по отдельным экземплярам классов: обнаруживаем статическую коллекцию \texttt{\_errorMessages} с большим количеством элементов, которая принадлежит используемой библиотеке.
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{screenshots/gc-4.png}
+    \caption{Выявление объекта-виновника утечки памяти.}
+  \end{figure}
+  \item Изучаем исходный код и обнаруживаем, что класс \texttt{JavaScript} аккумулирует логи ошибок в статическом массиве, который не очищается автоматически. Освобождение памяти возможно только через явный вызов метода \texttt{HttpUnitOptions.clearScriptErrorMessages()}, который на данный момент отсутствует в основном цикле обработки.
+\begin{lstlisting}[caption=Листинг класса JavaScript.]
+public class JavaScript {
+  // ...
+  private static ArrayList _errorMessages = new ArrayList();
+  // ...
+  static void clearErrorMessages() {
+    _errorMessages.clear();
+  }
+  // ...
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Листинг класса JavaScriptEngineFactory.]
+public class JavaScriptEngineFactory implements ScriptingEngineFactory {
+  // ...
+  public void clearErrorMessages() {
+    JavaScript.clearErrorMessages();
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Листинг класса HttpUnitOptions.]
+public abstract class HttpUnitOptions {
+  /**
+    * Determines whether script errors result in exceptions or warning messages.
+    */
+  public static void setExceptionsThrownOnScriptError( boolean throwExceptions ) {
+    _exceptionsThrownOnScriptError = throwExceptions;
+    getScriptingEngine().setThrowExceptionsOnError( throwExceptions );
+  }
+  /**
+    * Returns the accumulated script error messages encountered. Error messages are accumulated only
+    * if 'throwExceptionsOnError' is disabled.
+    */
+  public static String[] getScriptErrorMessages() {
+    return getScriptingEngine().getErrorMessages();
+  }
+  /**
+    * Clears the accumulated script error messages.
+    */
+  public static void clearScriptErrorMessages() {
+      getScriptingEngine().clearErrorMessages();
+  }
+
+  private static boolean _exceptionsThrownOnScriptError = true;
+}
+\end{lstlisting}
+\end{enumerate}
 
 \subsubsubsection{Пути устранения проблемы}
 
-Для снижения нагрузки на GC были проведены следующие мероприятия (например, переиспользование объектов через пул, замена тяжелых объектов на примитивы, оптимизация работы со строками через \texttt{StringBuilder}):
+Поскольку в основном цикле выполняется проверка корректности функционирования библиотеки, изменять общую стратегию обработки ошибок на генерацию исключений нецелесообразно.
 
-\subsubsection{Рост потребления области Metaspace}
+В качестве оптимального решения было выбрано добавление вызова метода \texttt{HttpUnitOptions.clearScriptErrorMessages()} в конце каждой итерации цикла для принудительного освобождения буфера сообщений.
 
-\subsubsubsection{Описание проблемы}
+В результате повторный запуск и мониторинг показали стабильную и предсказуемую работу сборщика мусора без деградации памяти:
 
-Постоянный тренд роста объема памяти, занимаемой областью Metaspace, что указывает на потенциальную утечку памяти, вызванную бесконтрольной динамической генерацией и загрузкой классов.
-
-\subsubsubsection{Алгоритм локализации проблемы}
-
-\begin{enumerate}
-    \item Мониторинг области Metaspace в VisualVM на длительном промежутке времени.
-    \item Снятие дампа кучи (Heap Dump) и его последующий анализ с помощью утилиты Eclipse Memory Analyzer (MAT) или встроенных средств IDE.
-    \item Анализ загруженных классов (\texttt{Duplicate Classes} или поиск динамически создаваемых классов).
-\end{enumerate}
-
-\begin{figure}[htbp]
-    \centering
-    \caption{График потребления памяти Metaspace и анализ структуры загруженных классов.}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{screenshots/gc-5.png}
+  \caption{Стабилизация работы GC после исправления.}
 \end{figure}
-
-\subsubsubsection{Пути устранения проблемы}
-
-Проблема была устранена путем (например, изменения конфигурации загрузчиков классов, исправления логики создания динамических прокси, обновления проблемной зависимости):
