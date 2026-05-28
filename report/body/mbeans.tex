@@ -1,0 +1,225 @@
+\subsection{Разработка MBeans}
+
+В соответствии с вариантом задания были разработаны два MBean для мониторинга статистики проверки точек.
+
+\subsubsection{PointCounterMBean}
+
+Первый MBean отвечает за подсчёт общего количества установленных пользователем точек и количества точек, не попавших в область (промахов). При достижении числа точек, кратного 15, MBean отправляет соответствующее уведомление. Учитываются как клики по графику, так и отправка формы.
+
+\begin{lstlisting}[caption=Листинг интерфейса \texttt{PointCounterMBean}.]
+package weblab.jmx;
+
+public interface PointCounterMBean {
+    int getTotalPoints();
+
+    int getMissPoints();
+
+    void resetStats();
+
+    void addPointEvent(boolean hit);
+}
+\end{lstlisting}
+
+Класс-реализация поддерживает отправку JMX-уведомлений через реализацию интерфейса \texttt{NotificationBroadcaster}.
+
+\begin{lstlisting}[caption=Листинг реализации \texttt{PointCounter}.]
+package weblab.jmx;
+
+import javax.management.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class PointCounter implements PointCounterMBean, NotificationBroadcaster {
+    private final AtomicInteger totalPoints = new AtomicInteger(0);
+    private final AtomicInteger missPoints = new AtomicInteger(0);
+    private long notificationSequence = 1;
+    private final NotificationBroadcasterSupport notificationSupport = new NotificationBroadcasterSupport();
+
+    @Override
+    public int getTotalPoints() {
+        return totalPoints.get();
+    }
+
+    @Override
+    public int getMissPoints() {
+        return missPoints.get();
+    }
+
+    @Override
+    public void resetStats() {
+        totalPoints.set(0);
+        missPoints.set(0);
+    }
+
+    @Override
+    public void addPointEvent(boolean hit) {
+        int newTotal = totalPoints.incrementAndGet();
+        if (!hit) missPoints.incrementAndGet();
+
+        if (newTotal % 15 == 0) sendNotification(newTotal, hit);
+    }
+
+    private void sendNotification(int total, boolean lastHit) {
+        Notification notification = new Notification(
+                "point.count.multiple.15",
+                this,
+                notificationSequence++,
+                System.currentTimeMillis(),
+                String.format("Total points count = %d (last hit = %s)", total, lastHit)
+        );
+        notificationSupport.sendNotification(notification);
+    }
+
+    @Override
+    public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws IllegalArgumentException {
+        notificationSupport.addNotificationListener(listener, filter, handback);
+    }
+
+    @Override
+    public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
+        notificationSupport.removeNotificationListener(listener);
+    }
+
+    @Override
+    public MBeanNotificationInfo[] getNotificationInfo() {
+        return new MBeanNotificationInfo[]{
+                new MBeanNotificationInfo(
+                        new String[]{"point.count.multiple.15"},
+                        Notification.class.getName(),
+                        "Sent when total point count becomes a multiple of 15"
+                )
+        };
+    }
+}
+\end{lstlisting}
+
+\subsubsection{MissPercentageMBean}
+
+Второй MBean вычисляет процентное отношение числа промахов к общему количеству кликов пользователя по координатной плоскости.
+
+\begin{lstlisting}[caption=Листинг интерфейса \texttt{MissPercentageMBean}.]
+package weblab.jmx;
+
+public interface MissPercentageMBean {
+    double getMissPercentage();
+
+    String getMissPercentageFormatted();
+
+    void resetStats();
+
+    void addClickEvent(boolean hit);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Листинг реализации \texttt{MissPercentage}.]
+package weblab.jmx;
+
+import java.text.DecimalFormat;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class MissPercentage implements MissPercentageMBean {
+    private final AtomicInteger totalClicks = new AtomicInteger(0);
+    private final AtomicInteger missClicks = new AtomicInteger(0);
+    private final DecimalFormat df = new DecimalFormat("0.000");
+
+    @Override
+    public double getMissPercentage() {
+        int total = totalClicks.get();
+        if (total == 0) return 0.0;
+
+        return (missClicks.get() * 100.0) / total;
+    }
+
+    @Override
+    public String getMissPercentageFormatted() {
+        return df.format(getMissPercentage()) + "%";
+    }
+
+    @Override
+    public void resetStats() {
+        totalClicks.set(0);
+        missClicks.set(0);
+    }
+
+    @Override
+    public void addClickEvent(boolean hit) {
+        totalClicks.incrementAndGet();
+        if (!hit) missClicks.incrementAndGet();
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Регистрация MBean}
+
+Регистрация обоих MBean выполняется в классе \texttt{JMXConfig} с областью видимости \texttt{@ApplicationScoped}, что гарантирует существование единственного экземпляра на всё приложение.
+
+\begin{lstlisting}[caption=Регистрация \texttt{MBean}.]
+package weblab.jmx;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
+
+@ApplicationScoped
+public class JMXConfig {
+    private PointCounterMBean pointCounter;
+    private MissPercentageMBean missPercentage;
+
+    @PostConstruct
+    public void init() {
+        try {
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+            pointCounter = new PointCounter();
+            mbs.registerMBean(pointCounter, new ObjectName("weblab:type=PointCounter"));
+
+            missPercentage = new MissPercentage();
+            mbs.registerMBean(missPercentage, new ObjectName("weblab:type=MissPercentage"));
+
+            System.out.println("JMX MBeans registered successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to register JMX MBeans");
+        }
+    }
+
+    public PointCounterMBean getPointCounter() {
+        return pointCounter;
+    }
+
+    public MissPercentageMBean getMissPercentage() {
+        return missPercentage;
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Интеграция с приложением}
+
+Вызов методов MBean производится в бине \texttt{PointCheckBean} при обработке кликов по графику (метод \texttt{submitFromGraph()}), а также отправки формы (метод \texttt{submitForm(int y)}). При этом первый MBean получает информацию обо всех установленных точках, а второй — только о кликах по координатной плоскости.
+
+\begin{lstlisting}[caption=Фрагмент интеграции \texttt{MBean}.]
+@Inject
+private JMXConfig jmxConfig;
+
+public void submitFromGraph() {
+    // ... smth cropped ...
+
+    boolean hit = results.get(0).hit();
+    
+    jmxConfig.getPointCounter().addPointEvent(hit);
+    jmxConfig.getMissPercentage().addClickEvent(hit);
+
+    // ... smth cropped ...
+}
+
+public void submitForm(int y) {
+    // ... smth cropped ...
+
+    for (CheckResult result : results) {
+        jmxConfig.getPointCounter().addPointEvent(result.hit());
+    }
+
+    // ... smth cropped ...
+}
+\end{lstlisting}

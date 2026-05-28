@@ -15,7 +15,6 @@
 |--------|------------|
 | `docker/run_pdf.sh <version_tag>` | Компиляция XeLaTeX-отчёта в формате PDF |
 | `docker/run_ant.sh <version_tag> <target>` | Запуск указанной Ant-цели с монтированием `.ant` и `.ssh` |
-| `docker/run_sandbox.sh <version_tag>` | Инициализация локальной SVN-песочницы через `make sandbox` |
 | `docker/run_env.sh <version_tag>` | Запуск цели `env` с пробросом сокета Docker _(Docker-out-of-Docker)_ |
 
 Пример использования:

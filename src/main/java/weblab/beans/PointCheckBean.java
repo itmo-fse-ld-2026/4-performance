@@ -6,6 +6,7 @@ import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import weblab.i18n.Messages;
+import weblab.jmx.JMXConfig;
 import weblab.models.CheckResult;
 import weblab.models.HistoryEntry;
 import weblab.models.Point;
@@ -62,6 +63,9 @@ public class PointCheckBean {
      */
     @Inject
     private HistoryBean historyBean;
+
+    @Inject
+    private JMXConfig jmxConfig;
 
     /**
      * Список точек для пакетной проверки.
@@ -357,6 +361,10 @@ public class PointCheckBean {
 
         double execTime = (System.nanoTime() - start) / 1e6;
 
+        boolean hit = results.get(0).hit();
+        jmxConfig.getPointCounter().addPointEvent(hit);
+        jmxConfig.getMissPercentage().addClickEvent(hit);
+
         String finalSessionID = sessionID;
         List<HistoryEntry> entries = results.stream()
                 .map(res -> new HistoryEntry(res.point(), res.hit(), timestamp, execTime, finalSessionID))
@@ -436,6 +444,10 @@ public class PointCheckBean {
 
         double execTime = (System.nanoTime() - start) / 1e6;
 
+        for (CheckResult result : results) {
+            jmxConfig.getPointCounter().addPointEvent(result.hit());
+        }
+
         String finalSessionID = sessionID;
         List<HistoryEntry> entries = results.stream()
                 .map(r -> new HistoryEntry(r.point(), r.hit(), timestamp, execTime, finalSessionID))
@@ -489,6 +501,10 @@ public class PointCheckBean {
         List<CheckResult> results = areaCheckService.checkPoints(points);
 
         double execTime = (System.nanoTime() - start) / 1e6;
+
+        for (CheckResult result : results) {
+            jmxConfig.getPointCounter().addPointEvent(result.hit());
+        }
 
         List<HistoryEntry> entries = results.stream()
                 .map(r -> new HistoryEntry(r.point(), r.hit(), timestamp, execTime, sessionID))
