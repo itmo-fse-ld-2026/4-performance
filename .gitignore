@@ -50,9 +50,15 @@ mvnw
 *.log
 *.toc
 *.out
+*.blg
+*.run.xml
+*.bcf
+*.bbl
 
 temp/
 __pycache__/
+visualvm/
+netbeans/
 venv/
 postgresql_db_data/
 *.compiled.*
@@ -60,5 +66,5 @@ postgresql_db_data/
 build.properties
 build-test/
 docs/
-*.md5
-*.sha1
+/http-unit/dist/
+/http-unit/nbproject/private/
